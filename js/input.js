@@ -18,6 +18,8 @@ export const TECLAS = {
     BAIXO:'ArrowDown',
     ESQUERDA:'ArrowLeft',
     DIREITA:'ArrowRight',
+    NORMAL:'KeyX',   
+    TURBO:'KeyZ', 
     ESPACO:'Space',
     ENTER:'Enter',
     ESC:'Escape',
