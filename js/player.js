@@ -100,3 +100,11 @@ export function desenharPlayer(ctx, player) {
     ctx.fillRect(player.x + player.largura - 4, player.y + player.altura - 4, 4, 4);
 }
 
+export function getTemperatura(player) {
+    return {
+        valor:         player.temperatura,
+        max:           TEMP_MAX,
+        limiteNormal:  TEMP_LIMITE_NORMAL,
+        superaquecido: player.superaquecido,
+    };
+}

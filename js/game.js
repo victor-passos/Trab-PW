@@ -2,7 +2,7 @@
 
 import { ESTADOS, obterEstado, definirEstado } from './estado.js';
 import { iniciarInput, teclaPressionada, TECLAS } from './input.js';
-import { criarPlayer, atualizarPlayer, desenharPlayer } from './player.js';
+import { criarPlayer, atualizarPlayer, desenharPlayer, getTemperatura } from './player.js';
 import { desenharPista, obterLimitesPista } from './pista.js';
 
 // ─── Configuração do Canvas ────────────────────────────────────────────────
@@ -120,6 +120,45 @@ function desenharHUD() {
     ctx.textAlign = 'right';
     ctx.fillText(`Vel: ${player.velocidade.toFixed(1)}`, LARGURA_TELA - 10, 20);
     ctx.fillText(`Dist: ${Math.floor(deslocamento)}m`, LARGURA_TELA - 10, 38);
+
+    // ── Barra de temperatura (inferior central) ────────────────────────────
+    const temp        = getTemperatura(player);
+    const barLargura  = 200;
+    const barAltura   = 12;
+    const barX        = (LARGURA_TELA - barLargura) / 2;
+    const barY        = ALTURA_TELA - 24;
+    const proporcao   = temp.valor / temp.max;
+    const limiteX     = barX + (temp.limiteNormal / temp.max) * barLargura;
+ 
+    // Fundo da barra
+    ctx.fillStyle = '#333';
+    ctx.fillRect(barX, barY, barLargura, barAltura);
+ 
+    // Preenchimento — cor muda conforme temperatura
+    if (temp.superaquecido) {
+        ctx.fillStyle = Math.floor(Date.now() / 150) % 2 === 0 ? '#ff0000' : '#ff8800';
+    } else if (temp.valor > temp.limiteNormal) {
+        ctx.fillStyle = '#ff6600';
+    } else {
+        ctx.fillStyle = '#00cc44';
+    }
+    ctx.fillRect(barX, barY, barLargura * proporcao, barAltura);
+ 
+    // Linha do limite seguro (50%)
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth   = 1;
+    ctx.beginPath();
+    ctx.moveTo(limiteX, barY);
+    ctx.lineTo(limiteX, barY + barAltura);
+    ctx.stroke();
+ 
+    // Label
+    ctx.fillStyle = '#ffffff';
+    ctx.font      = '11px monospace';
+    ctx.textAlign = 'center';
+    const labelTemp = temp.superaquecido ? 'ESFRIANDO...' : 'TEMP';
+    ctx.fillText(labelTemp, LARGURA_TELA / 2, barY - 3);
+
 }
 
 // ─── Telas de estado ───────────────────────────────────────────────────────
@@ -135,7 +174,7 @@ function desenharTelaInicio() {
 
     ctx.fillStyle = '#aaaaaa';
     ctx.font      = '13px monospace';
-    ctx.fillText('↑ Acelerar  ↓ Frear  ← → Mudar posição', LARGURA_TELA / 2, ALTURA_TELA / 2 + 55);
+    ctx.fillText('↑ ↓ Mudar faixa  X Acelerar    Z Turbo    ESC Pausar', LARGURA_TELA / 2, ALTURA_TELA / 2 + 55);
     }
 
     function desenharTelaPausa() {
