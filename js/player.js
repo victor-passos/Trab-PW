@@ -1,4 +1,5 @@
 import { teclaPressionada, TECLAS } from './input.js';
+import { NUM_FAIXAS, obterPosFaixa } from './pista.js';
 
 
 // Constantes de movimento
@@ -10,7 +11,7 @@ const VEL_MAX_TURBO = 8;
 const ACELERACAO_NORMAL = 0.15;
 const ACELERACAO_TURBO = 0.25;
 const FRENAGEM = 0.12;
-const VEL_LATERAL = 2.5;
+const VEL_LATERAL = 0.2;
 
 //Constantes de temperatura do motor
 
@@ -24,34 +25,50 @@ const DURACAO_COOLDOWN = 180;
 export function criarPlayer(larguraTela, alturaTela){
     return {
         x: 100,
-        y: alturaTela/2,
+        y: 0,
         largura: TAMX,
         altura: TAMY,
         velocidade: 0,
         cor: '#00ff00',
         vidas: 3,
         pontuacao: 0,
+        faixaAtual: 3,
+        yDestino: 0,
         temperatura: 0,
         superaquecido: false,
         tempoCoolDown: 0,
+        teclaFaixaAtiva: false,
 
     };
+}
+
+export function iniciarFaixa(player, alturaPista){
+    player.y = obterPosFaixa(player.faixaAtual, alturaPista) - player.altura/2;
+    player.yDestino = player.y;
 }
 
 export function atualizarPlayer(player, larguraTela, alturaPista){  
     const margemTopo  = alturaPista.topo;
     const margemBase  = alturaPista.base - player.altura;
-    
     if (player.y < margemTopo)  player.y = margemTopo;
     if (player.y > margemBase)  player.y = margemBase;
 
-    if (teclaPressionada(TECLAS.BAIXO)){
-        player.y += VEL_LATERAL;
+    if(!teclaPressionada(TECLAS.BAIXO) && !teclaPressionada(TECLAS.CIMA)){
+        player.teclaFaixaAtiva = false;
     }
 
-     if (teclaPressionada(TECLAS.CIMA)){
-        player.y -= VEL_LATERAL;
+    if(!player.teclaFaixaAtiva){
+        if(teclaPressionada(TECLAS.CIMA) && player.faixaAtual > 0){
+            player.faixaAtual--;
+            player.teclaFaixaAtiva = true;
+        } else if(teclaPressionada(TECLAS.BAIXO) && player.faixaAtual < NUM_FAIXAS - 1){
+            player.faixaAtual++;
+            player.teclaFaixaAtiva = true;
+        }
     }
+
+    player.yDestino = obterPosFaixa(player.faixaAtual, alturaPista) - player.altura/2; //atualiza yDestino com base na faixa atual
+    player.y += (player.yDestino - player.y) * VEL_LATERAL; //animação de transição
 
     const turboAtivo = teclaPressionada(TECLAS.TURBO);
     const normalAtivo = teclaPressionada(TECLAS.NORMAL);

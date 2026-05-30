@@ -2,7 +2,7 @@
 
 import { ESTADOS, obterEstado, definirEstado } from './estado.js';
 import { iniciarInput, teclaPressionada, TECLAS } from './input.js';
-import { criarPlayer, atualizarPlayer, desenharPlayer, getTemperatura } from './player.js';
+import { criarPlayer, atualizarPlayer, desenharPlayer, getTemperatura, iniciarFaixa } from './player.js';
 import { desenharPista, obterLimitesPista } from './pista.js';
 
 // ─── Configuração do Canvas ────────────────────────────────────────────────
@@ -26,9 +26,7 @@ function iniciar() {
 
     const limitesPista = obterLimitesPista(ALTURA_TELA);
     player = criarPlayer(LARGURA_TELA, ALTURA_TELA);
-
-    // Posiciona o player verticalmente no centro da pista
-    player.y = limitesPista.topo + (limitesPista.base - limitesPista.topo) / 2 - player.altura / 2;
+    iniciarFaixa(player, limitesPista);
 
     definirEstado(ESTADOS.INICIO);
     requestAnimationFrame(loop);
