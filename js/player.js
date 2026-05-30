@@ -22,6 +22,11 @@ const CALOR_TURBO = 0.8;
 const RESFRIAMENTO = 0.4;
 const DURACAO_COOLDOWN = 180;
 
+const EMPINADA_MAX = 0.5;
+const EMPINADA_MIN = -0.25;
+const VEL_EMPINADA = 0.03;
+const EMPINADA_RETONRO = 0.05;
+
 export function criarPlayer(larguraTela, alturaTela){
     return {
         x: 100,
@@ -38,6 +43,7 @@ export function criarPlayer(larguraTela, alturaTela){
         superaquecido: false,
         tempoCoolDown: 0,
         teclaFaixaAtiva: false,
+        empinada: 0,
 
     };
 }
@@ -70,6 +76,16 @@ export function atualizarPlayer(player, larguraTela, alturaPista){
     player.yDestino = obterPosFaixa(player.faixaAtual, alturaPista) - player.altura/2; //atualiza yDestino com base na faixa atual
     player.y += (player.yDestino - player.y) * VEL_LATERAL; //animação de transição
 
+    if (player.superaquecido){
+        player.tempoCoolDown--;
+        player.temperatura = Math.max(0, player.temperatura - RESFRIAMENTO * 2);
+
+        if (player.tempoCoolDown <= 0){
+            player.superaquecido = false;
+        }
+        return;
+    }
+
     const turboAtivo = teclaPressionada(TECLAS.TURBO);
     const normalAtivo = teclaPressionada(TECLAS.NORMAL);
 
@@ -91,19 +107,31 @@ export function atualizarPlayer(player, larguraTela, alturaPista){
         player.velocidade = 0;
     }
 
-    if (player.superaquecido){
-        player.tempoCoolDown--;
-        player.temperatura = Math.max(0, player.temperatura - RESFRIAMENTO * 2);
-
-        if (player.tempoCoolDown <= 0){
-            player.superaquecido = false;
+    //Empinada
+    if(teclaPressionada(TECLAS.ESQUERDA)){
+        player.empinada = Math.min(player.empinada + VEL_EMPINADA, EMPINADA_MAX);
+    } else if( teclaPressionada(TECLAS.DIREITA)){
+        player.empinada = Math.max(player.empinada - VEL_EMPINADA, EMPINADA_MIN);
+    } else{
+        if(player.empinada > 0){
+            player.empinada = Math.max(player.empinada - EMPINADA_RETONRO, 0);
+        } else if(player.empinada < 0){
+            player.empinada = Math.min(player.empinada + EMPINADA_RETONRO, 0)
         }
-        return;
     }
+
+
 }
 
 
 export function desenharPlayer(ctx, player) {
+    const pivotX = player.x + player.largura * 0.25;
+    const pivotY = player.y + player.altura;
+
+    ctx.save();
+    ctx.translate(pivotX, pivotY);
+    ctx.rotate(-player.empinada);
+    ctx.translate(-pivotX, -pivotY)
 
     if(player.superaquecido){
         ctx.fillStyle = '#ff0000';
@@ -115,6 +143,8 @@ export function desenharPlayer(ctx, player) {
     // Ponto de referência (roda dianteira) — só para debug visual
     ctx.fillStyle = '#ffffff';
     ctx.fillRect(player.x + player.largura - 4, player.y + player.altura - 4, 4, 4);
+
+    ctx.restore();
 }
 
 export function getTemperatura(player) {
