@@ -1,4 +1,5 @@
 import { teclaPressionada, TECLAS } from './input.js';
+import { NUM_FAIXAS, obterPosFaixa } from './pista.js';
 
 
 // Constantes de movimento
@@ -10,48 +11,129 @@ const VEL_MAX_TURBO = 8;
 const ACELERACAO_NORMAL = 0.15;
 const ACELERACAO_TURBO = 0.25;
 const FRENAGEM = 0.12;
-const VEL_LATERAL = 2.5;
+const VEL_LATERAL = 0.2;
 
 //Constantes de temperatura do motor
 
 const TEMP_MAX = 100;
 const TEMP_LIMITE_NORMAL = 50;
 const CALOR_NORMAL = 0.3;
-const CALOR_TURBO = 0.8;
+const CALOR_TURBO = 0.3;
 const RESFRIAMENTO = 0.4;
 const DURACAO_COOLDOWN = 180;
+
+
+//Constantes de empinada
+const EMPINADA_MAX = 0.5;
+const EMPINADA_MIN = -0.25;
+const VEL_EMPINADA = 0.03;
+const EMPINADA_RETONRO = 0.05;
+const EMPINADA_BOOST_MAX = 2;
+const TEMPO_EMPINADA_MAX = 90;
+const DURACAO_CAIDA = 150;
 
 export function criarPlayer(larguraTela, alturaTela){
     return {
         x: 100,
-        y: alturaTela/2,
+        y: 0,
         largura: TAMX,
         altura: TAMY,
         velocidade: 0,
         cor: '#00ff00',
         vidas: 3,
         pontuacao: 0,
+        faixaAtual: 3,
+        yDestino: 0,
         temperatura: 0,
         superaquecido: false,
         tempoCoolDown: 0,
+        teclaFaixaAtiva: false,
+        empinada: 0,
+        tempoEmpinada: 0,
+        caido: false,
+        tempoCaida: 0,
 
     };
+}
+
+export function iniciarFaixa(player, alturaPista){
+    player.y = obterPosFaixa(player.faixaAtual, alturaPista) - player.altura/2;
+    player.yDestino = player.y;
 }
 
 export function atualizarPlayer(player, larguraTela, alturaPista){  
     const margemTopo  = alturaPista.topo;
     const margemBase  = alturaPista.base - player.altura;
-    
     if (player.y < margemTopo)  player.y = margemTopo;
     if (player.y > margemBase)  player.y = margemBase;
 
-    if (teclaPressionada(TECLAS.BAIXO)){
-        player.y += VEL_LATERAL;
+    if(!teclaPressionada(TECLAS.BAIXO) && !teclaPressionada(TECLAS.CIMA)){
+        player.teclaFaixaAtiva = false;
     }
 
-     if (teclaPressionada(TECLAS.CIMA)){
-        player.y -= VEL_LATERAL;
+    if(!player.teclaFaixaAtiva){
+        if(teclaPressionada(TECLAS.CIMA) && player.faixaAtual > 0){
+            player.faixaAtual--;
+            player.teclaFaixaAtiva = true;
+        } else if(teclaPressionada(TECLAS.BAIXO) && player.faixaAtual < NUM_FAIXAS - 1){
+            player.faixaAtual++;
+            player.teclaFaixaAtiva = true;
+        }
     }
+
+    player.yDestino = obterPosFaixa(player.faixaAtual, alturaPista) - player.altura/2; //atualiza yDestino com base na faixa atual
+    player.y += (player.yDestino - player.y) * VEL_LATERAL; //animação de transição
+
+    if(player.caido){
+        player.tempoCaida--;
+        player.empinada = Math.max(player.empinada - EMPINADA_RETONRO * 2, 0);
+        if(player.tempoCaida <= 0){
+            player.caido = false;
+            player.velocidade = 0;
+        }
+        return;
+    }
+
+    if (player.superaquecido){
+        player.tempoCoolDown--;
+        player.temperatura = Math.max(0, player.temperatura - RESFRIAMENTO * 2);
+
+        if (player.tempoCoolDown <= 0){
+            player.superaquecido = false;
+        }
+        return;
+    }
+
+    //Empinada
+    if(teclaPressionada(TECLAS.ESQUERDA)){
+        player.empinada = Math.min(player.empinada + VEL_EMPINADA, EMPINADA_MAX);
+        if(player.empinada >=  EMPINADA_MAX * 0.7){
+            player.tempoEmpinada++;
+        }
+
+        if(player.tempoEmpinada >= TEMPO_EMPINADA_MAX){
+            player.caido = true;
+            player.tempoCaida = DURACAO_CAIDA;
+            player.tempoEmpinada = 0;
+            player.velocidade = 0;
+            return;
+        }
+
+    } else if( teclaPressionada(TECLAS.DIREITA)){
+        player.empinada = Math.max(player.empinada - VEL_EMPINADA, EMPINADA_MIN);
+        player.tempoEmpinada = Math.max(player.tempoEmpinada - 2, 0);
+    } else{
+        if(player.empinada > 0){
+            player.empinada = Math.max(player.empinada - EMPINADA_RETONRO, 0);
+        } else if(player.empinada < 0){
+            player.empinada = Math.min(player.empinada + EMPINADA_RETONRO, 0)
+        }
+        player.tempoEmpinada = Math.max(player.tempoEmpinada - 1, 0);
+    }
+
+    const proporcaoEmpinada = Math.max(player.empinada, 0) / EMPINADA_MAX;
+    const boostAtual        = proporcaoEmpinada * EMPINADA_BOOST_MAX;
+    const velMaxEfetiva     = Math.min(VEL_MAX_NORMAL + boostAtual, VEL_MAX_TURBO);
 
     const turboAtivo = teclaPressionada(TECLAS.TURBO);
     const normalAtivo = teclaPressionada(TECLAS.NORMAL);
@@ -60,7 +142,7 @@ export function atualizarPlayer(player, larguraTela, alturaPista){
         player.velocidade = Math.min(player.velocidade + ACELERACAO_TURBO, VEL_MAX_TURBO);
         player.temperatura = Math.min(player.temperatura + CALOR_TURBO, TEMP_MAX);
     } else if(normalAtivo) {
-        player.velocidade = Math.min(player.velocidade + ACELERACAO_NORMAL, VEL_MAX_NORMAL);
+        player.velocidade = Math.min(player.velocidade + ACELERACAO_NORMAL, velMaxEfetiva);
         player.temperatura = Math.min(player.temperatura + CALOR_NORMAL, TEMP_LIMITE_NORMAL);
 
     } else{
@@ -73,24 +155,23 @@ export function atualizarPlayer(player, larguraTela, alturaPista){
         player.tempoCoolDown = DURACAO_COOLDOWN;
         player.velocidade = 0;
     }
-
-    if (player.superaquecido){
-        player.tempoCoolDown--;
-        player.temperatura = Math.max(0, player.temperatura - RESFRIAMENTO * 2);
-
-        if (player.tempoCoolDown <= 0){
-            player.superaquecido = false;
-        }
-        return;
-    }
 }
 
 
 export function desenharPlayer(ctx, player) {
+    const pivotX = player.x + player.largura * 0.25;
+    const pivotY = player.y + player.altura;
+
+    ctx.save();
+    ctx.translate(pivotX, pivotY);
+    ctx.rotate(-player.empinada);
+    ctx.translate(-pivotX, -pivotY)
 
     if(player.superaquecido){
         ctx.fillStyle = '#ff0000';
-    } else{
+    } else if(player.caido){
+        ctx.fillStyle = '#ffff00'
+    }else{
         ctx.fillStyle = player.cor;
     }
     ctx.fillRect(player.x, player.y, player.largura, player.altura);
@@ -98,6 +179,8 @@ export function desenharPlayer(ctx, player) {
     // Ponto de referência (roda dianteira) — só para debug visual
     ctx.fillStyle = '#ffffff';
     ctx.fillRect(player.x + player.largura - 4, player.y + player.altura - 4, 4, 4);
+
+    ctx.restore();
 }
 
 export function getTemperatura(player) {
@@ -108,3 +191,5 @@ export function getTemperatura(player) {
         superaquecido: player.superaquecido,
     };
 }
+
+//export function getEmpinada(player){return{ tempoAtual: player.tempoEmpinada, tempoMax: TEMPO_EMPINADA_MAX, caido: player.caido,}}
