@@ -7,7 +7,7 @@ export const ESTADOS ={
 
 let estadoAtual = ESTADOS.INICIO;
  
-export function obterEstado() {
+export function getEstado() {
     return estadoAtual;
 }
  

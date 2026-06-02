@@ -1,5 +1,5 @@
 import { teclaPressionada, TECLAS } from './input.js';
-import { NUM_FAIXAS, obterPosFaixa } from './pista.js';
+import { NUM_FAIXAS, getPosFaixa } from './pista.js';
 
 
 // Constantes de movimento
@@ -57,7 +57,7 @@ export function criarPlayer(larguraTela, alturaTela){
 }
 
 export function iniciarFaixa(player, alturaPista){
-    player.y = obterPosFaixa(player.faixaAtual, alturaPista) - player.altura/2;
+    player.y = getPosFaixa(player.faixaAtual, alturaPista) - player.altura/2;
     player.yDestino = player.y;
 }
 
@@ -81,7 +81,7 @@ export function atualizarPlayer(player, larguraTela, alturaPista){
         }
     }
 
-    player.yDestino = obterPosFaixa(player.faixaAtual, alturaPista) - player.altura/2; //atualiza yDestino com base na faixa atual
+    player.yDestino = getPosFaixa(player.faixaAtual, alturaPista) - player.altura/2; //atualiza yDestino com base na faixa atual
     player.y += (player.yDestino - player.y) * VEL_LATERAL; //animação de transição
 
     if(player.caido){

@@ -1,9 +1,9 @@
 // game.js — ponto de entrada e loop principal do jogo
 
-import { ESTADOS, obterEstado, definirEstado } from './estado.js';
+import { ESTADOS, getEstado, definirEstado } from './estado.js';
 import { iniciarInput, teclaPressionada, TECLAS } from './input.js';
 import { criarPlayer, atualizarPlayer, desenharPlayer, getTemperatura, iniciarFaixa } from './player.js';
-import { desenharPista, obterLimitesPista } from './pista.js';
+import { desenharPista, getLimitesPista } from './pista.js';
 
 // ─── Configuração do Canvas ────────────────────────────────────────────────
 const tela    = document.getElementById('tela');
@@ -24,7 +24,7 @@ let ultimoTempo   = 0;
 function iniciar() {
     iniciarInput();
 
-    const limitesPista = obterLimitesPista(ALTURA_TELA);
+    const limitesPista = getLimitesPista(ALTURA_TELA);
     player = criarPlayer(LARGURA_TELA, ALTURA_TELA);
     iniciarFaixa(player, limitesPista);
 
@@ -48,7 +48,7 @@ function loop(timestamp) {
 
 // ─── Processamento por estado ──────────────────────────────────────────────
 function processar(delta) {
-    const estado = obterEstado();
+    const estado = getEstado();
 
     if (estado === ESTADOS.INICIO) {
         if (teclaPressionada(TECLAS.ENTER) || teclaPressionada(TECLAS.ESPACO)) {
@@ -63,7 +63,7 @@ function processar(delta) {
         return;
         }
 
-        const limitesPista = obterLimitesPista(ALTURA_TELA);
+        const limitesPista = getLimitesPista(ALTURA_TELA);
         atualizarPlayer(player, LARGURA_TELA, limitesPista);
 
         // Avança o deslocamento da pista com base na velocidade do player
@@ -88,7 +88,7 @@ function desenhar() {
     ctx.fillStyle = '#000000';
     ctx.fillRect(0, 0, LARGURA_TELA, ALTURA_TELA);
 
-    const estado = obterEstado();
+    const estado = getEstado();
 
     if (estado === ESTADOS.INICIO) {
         desenharTelaInicio();
