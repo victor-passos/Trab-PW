@@ -143,8 +143,11 @@ export function atualizarPlayer(player, larguraTela, alturaPista){
         player.temperatura = Math.min(player.temperatura + CALOR_TURBO, TEMP_MAX);
     } else if(normalAtivo) {
         player.velocidade = Math.min(player.velocidade + ACELERACAO_NORMAL, velMaxEfetiva);
-        player.temperatura = Math.min(player.temperatura + CALOR_NORMAL, TEMP_LIMITE_NORMAL);
-
+         if (player.temperatura < TEMP_LIMITE_NORMAL) {
+            player.temperatura = Math.min(player.temperatura + CALOR_NORMAL, TEMP_LIMITE_NORMAL);
+        } else {
+            player.temperatura = Math.max(player.temperatura - RESFRIAMENTO, TEMP_LIMITE_NORMAL);
+        }
     } else{
         player.velocidade = Math.max(player.velocidade - FRENAGEM, VEL_MIN);
         player.temperatura = Math.max(player.temperatura - RESFRIAMENTO, 0);
