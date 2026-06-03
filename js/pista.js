@@ -7,13 +7,13 @@ const ESPACAMENTO = 80;   // distância entre as linhas verticais (marcações)
 export const NUM_FAIXAS = 4;
  
 // Retorna os limites verticais da pista no canvas
-export function obterLimitesPista(alturaTela) {
+export function getLimitesPista(alturaTela) {
     const topo = Math.floor(alturaTela * 0.2);
     const base = Math.floor(alturaTela * 0.8);
     return { topo, base };
 }
 
-export function obterPosFaixa(faixa, limites) {
+export function getPosFaixa(faixa, limites) {
     const alturaPista  = limites.base - limites.topo;
     const alturaFaixa = alturaPista/NUM_FAIXAS;
     return limites.topo + faixa * alturaFaixa + alturaFaixa/2;
@@ -22,7 +22,7 @@ export function obterPosFaixa(faixa, limites) {
 
  
 export function desenharPista(ctx, larguraTela, alturaTela, deslocamento) {
-    const { topo, base } = obterLimitesPista(alturaTela);
+    const { topo, base } = getLimitesPista(alturaTela);
     const alturaPista = base -topo;
     const alturaFaixa = alturaPista/NUM_FAIXAS;
  
