@@ -5,32 +5,22 @@ import { NUM_FAIXAS, getPosFaixa } from './pista.js';
 // Constantes de movimento
 const TAMX = 24;
 const TAMY = 16;
-const VEL_MIN = 0;
-const VEL_MAX_NORMAL = 5;
-const VEL_MAX_TURBO = 8;
-const ACELERACAO_NORMAL = 0.15;
-const ACELERACAO_TURBO = 0.25;
-const FRENAGEM = 0.12;
 const VEL_LATERAL = 0.2;
-
-//Constantes de temperatura do motor
-
-const TEMP_MAX = 100;
-const TEMP_LIMITE_NORMAL = 50;
-const CALOR_NORMAL = 0.3;
-const CALOR_TURBO = 0.3;
-const RESFRIAMENTO = 0.4;
-const DURACAO_COOLDOWN = 180;
-
 
 //Constantes de empinada
 const EMPINADA_MAX = 0.5;
 const EMPINADA_MIN = -0.25;
 const VEL_EMPINADA = 0.03;
 const EMPINADA_RETONRO = 0.05;
-const EMPINADA_BOOST_MAX = 2;
 const TEMPO_EMPINADA_MAX = 90;
 const DURACAO_CAIDA = 150;
+
+// Item Turbo
+const DURACAO_TURBO = 180;
+const MULTIPLICADOR_TURBO = 1.8;
+const EMPINADA_TURBO = 0.4;
+const VEL_EMPINADA_TURBO = 0.04;
+
 
 export function criarPlayer(larguraTela, alturaTela){
     return {
@@ -44,14 +34,15 @@ export function criarPlayer(larguraTela, alturaTela){
         pontuacao: 0,
         faixaAtual: 3,
         yDestino: 0,
-        temperatura: 0,
-        superaquecido: false,
-        tempoCoolDown: 0,
         teclaFaixaAtiva: false,
         empinada: 0,
         tempoEmpinada: 0,
         caido: false,
         tempoCaida: 0,
+        turboCarregado: false,
+        turboAtivo: false,
+        tempoDuracao: 0,
+        teclaTurboAtiva: false,
 
     };
 }
@@ -61,7 +52,7 @@ export function iniciarFaixa(player, alturaPista){
     player.yDestino = player.y;
 }
 
-export function atualizarPlayer(player, larguraTela, alturaPista){  
+export function atualizarPlayer(player, larguraTela, alturaPista, velocidadeGlobal){  
     const margemTopo  = alturaPista.topo;
     const margemBase  = alturaPista.base - player.altura;
     if (player.y < margemTopo)  player.y = margemTopo;
@@ -94,15 +85,29 @@ export function atualizarPlayer(player, larguraTela, alturaPista){
         return;
     }
 
-    if (player.superaquecido){
-        player.tempoCoolDown--;
-        player.temperatura = Math.max(0, player.temperatura - RESFRIAMENTO * 2);
+    if (!teclaPressionada(TECLAS.TURBO)) {
+        player.teclaTurboAtiva = false;
+    }
 
-        if (player.tempoCoolDown <= 0){
-            player.superaquecido = false;
+    if (teclaPressionada(TECLAS.TURBO) && !player.teclaTurboAtiva && player.turboCarregado) {
+        player.turboAtivo      = true;
+        player.turboCarregado  = false;
+        player.teclaTurboAtiva = true;
+        player.tempoDuracao    = DURACAO_TURBO;
+    }
+
+        if (player.turboAtivo) {
+        player.tempoDuracao--;
+        player.velocidade = velocidadeGlobal * MULTIPLICADOR_TURBO;
+        player.empinada = Math.min(player.empinada + VEL_EMPINADA_TURBO, EMPINADA_TURBO);
+ 
+        if (player.tempoDuracao <= 0) {
+            player.turboAtivo = false;
         }
         return;
     }
+
+    player.velocidade = velocidadeGlobal;
 
     //Empinada
     if(teclaPressionada(TECLAS.ESQUERDA)){
@@ -130,34 +135,6 @@ export function atualizarPlayer(player, larguraTela, alturaPista){
         }
         player.tempoEmpinada = Math.max(player.tempoEmpinada - 1, 0);
     }
-
-    const proporcaoEmpinada = Math.max(player.empinada, 0) / EMPINADA_MAX;
-    const boostAtual        = proporcaoEmpinada * EMPINADA_BOOST_MAX;
-    const velMaxEfetiva     = Math.min(VEL_MAX_NORMAL + boostAtual, VEL_MAX_TURBO);
-
-    const turboAtivo = teclaPressionada(TECLAS.TURBO);
-    const normalAtivo = teclaPressionada(TECLAS.NORMAL);
-
-    if(turboAtivo){
-        player.velocidade = Math.min(player.velocidade + ACELERACAO_TURBO, VEL_MAX_TURBO);
-        player.temperatura = Math.min(player.temperatura + CALOR_TURBO, TEMP_MAX);
-    } else if(normalAtivo) {
-        player.velocidade = Math.min(player.velocidade + ACELERACAO_NORMAL, velMaxEfetiva);
-         if (player.temperatura < TEMP_LIMITE_NORMAL) {
-            player.temperatura = Math.min(player.temperatura + CALOR_NORMAL, TEMP_LIMITE_NORMAL);
-        } else {
-            player.temperatura = Math.max(player.temperatura - RESFRIAMENTO, TEMP_LIMITE_NORMAL);
-        }
-    } else{
-        player.velocidade = Math.max(player.velocidade - FRENAGEM, VEL_MIN);
-        player.temperatura = Math.max(player.temperatura - RESFRIAMENTO, 0);
-    }
-
-    if(player.temperatura >= TEMP_MAX){
-        player.superaquecido = true;
-        player.tempoCoolDown = DURACAO_COOLDOWN;
-        player.velocidade = 0;
-    }
 }
 
 
@@ -170,8 +147,9 @@ export function desenharPlayer(ctx, player) {
     ctx.rotate(-player.empinada);
     ctx.translate(-pivotX, -pivotY)
 
-    if(player.superaquecido){
-        ctx.fillStyle = '#ff0000';
+    if(player.turboAtivo){
+        ctx.fillStyle = '#00e5ff';
+         ctx.shadowBlur  = 12;
     } else if(player.caido){
         ctx.fillStyle = '#ffff00'
     }else{
@@ -180,19 +158,29 @@ export function desenharPlayer(ctx, player) {
     ctx.fillRect(player.x, player.y, player.largura, player.altura);
  
     // Ponto de referência (roda dianteira) — só para debug visual
+    ctx.shadowBlur = 0;
     ctx.fillStyle = '#ffffff';
     ctx.fillRect(player.x + player.largura - 4, player.y + player.altura - 4, 4, 4);
 
     ctx.restore();
 }
 
-export function getTemperatura(player) {
+export function getEmpinada(player) {
     return {
-        valor:         player.temperatura,
-        max:           TEMP_MAX,
-        limiteNormal:  TEMP_LIMITE_NORMAL,
-        superaquecido: player.superaquecido,
+        tempoAtual: player.tempoEmpinada,
+        tempoMax: TEMPO_EMPINADA_MAX,
+        caido: player.caido,
     };
 }
+ 
+export function getTurbo(player) {
+    return {
+        carregado: player.turboCarregado,
+        ativo: player.turboAtivo,
+        tempoAtual: player.tempoDuracao,
+        tempoMax: DURACAO_TURBO,
+    };
+}
+
 
 //export function getEmpinada(player){return{ tempoAtual: player.tempoEmpinada, tempoMax: TEMPO_EMPINADA_MAX, caido: player.caido,}}
