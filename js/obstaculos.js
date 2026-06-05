@@ -17,7 +17,7 @@ const CONFIG = {
     },
     agua: {
         largura: 120,
-        altura: 12,
+        altura: 60,            // Aumentado de 12 para 60 (preenche a faixa inteira)
         cor: '#1a6bbf',
         corBorda:'#0d4a8a',
         velocidade: 0,          // estático na pista
@@ -38,8 +38,8 @@ const CONFIG = {
     },
 };
 
-const INTERVALO_SPAWN_MIN = 80;   // frames mínimos entre spawns
-const INTERVALO_SPAWN_MAX = 160;  // frames máximos entre spawns
+const INTERVALO_SPAWN_MIN = 60;   // frames mínimos entre spawns
+const INTERVALO_SPAWN_MAX = 120;  // frames máximos entre spawns
 
 
 //Estado
@@ -139,14 +139,19 @@ function desenharDetalhe(ctx, obs) {
             ctx.fill();
         }
     } else if (obs.tipo === TIPO_OBSTACULO.AGUA) {
-        // ondinha
+        // ondinhas espalhadas por toda a faixa
         ctx.strokeStyle = 'rgba(255,255,255,0.3)';
         ctx.lineWidth   = 1;
         ctx.beginPath();
-        for (let x = obs.x + 8; x < obs.x + obs.largura - 8; x += 16) {
-            ctx.moveTo(x,      obs.y + obs.altura / 2);
-            ctx.lineTo(x + 8,  obs.y + obs.altura / 2 - 3);
-            ctx.lineTo(x + 16, obs.y + obs.altura / 2);
+        
+        // Desenha 3 fileiras de ondas para preencher a poça maior
+        for (let linha = 1; linha <= 3; linha++) {
+            const yOnda = obs.y + (obs.altura / 4) * linha;
+            for (let x = obs.x + 8; x < obs.x + obs.largura - 8; x += 16) {
+                ctx.moveTo(x,      yOnda);
+                ctx.lineTo(x + 8,  yOnda - 3);
+                ctx.lineTo(x + 16, yOnda);
+            }
         }
         ctx.stroke();
     } else if (obs.tipo === TIPO_OBSTACULO.VEICULO) {
@@ -165,7 +170,7 @@ function desenharDetalhe(ctx, obs) {
     }
 }
  
-// ─── Getter para colisão ──────────────────────────────────────────────────
+// Getter para colisão 
 export function getObstaculos() {
     return obstaculosAtivos;
 }

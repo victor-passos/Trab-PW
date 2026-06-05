@@ -1,8 +1,8 @@
 // game.js — ponto de entrada e loop principal do jogo
 
 import { ESTADOS, getEstado, definirEstado } from './estado.js';
-import { iniciarInput, teclaPressionada, TECLAS } from './input.js';
-import { criarPlayer, atualizarPlayer, desenharPlayer, getEmpinada, getTurbo, iniciarFaixa } from './player.js';
+import { iniciarInput, teclaPressionada, teclaPressionadaAgora, TECLAS } from './input.js';
+import { criarPlayer, atualizarPlayer, desenharPlayer, getTurbo, iniciarFaixa } from './player.js';
 import { desenharPista, getLimitesPista } from './pista.js';
 import { atualizarObstaculos, desenharObstaculos, resetarObstaculos } from './obstaculos.js';
 import { atualizarItens, desenharItens, resetarItens } from './itens.js';
@@ -22,8 +22,8 @@ tela.width  = LARGURA_TELA;
 tela.height = ALTURA_TELA;
 
 // ─── Dificuldade (velocidade global) ──────────────────────────────────────
-const VEL_INICIAL      = 3;
-const VEL_MAXIMA       = 12;
+const VEL_INICIAL      = 4; 
+const VEL_MAXIMA       = 14; 
 const INCREMENTO_VEL   = 0.0005; // incremento por frame
 
 let velocidadeGlobal   = VEL_INICIAL;
@@ -80,7 +80,7 @@ function processar(delta) {
     }
 
     if (estado === ESTADOS.JOGANDO) {
-        if (teclaPressionada(TECLAS.ESC)) {
+        if (teclaPressionadaAgora(TECLAS.ESC)) {
             definirEstado(ESTADOS.PAUSA);
             return;
         }
@@ -100,8 +100,11 @@ function processar(delta) {
         aplicarColisoes(player, resultados, {
             onDano:  () => verificarFimDeJogo(),
             onMoeda: () => registrarMoeda(),
-            onLama:  () => {},
-            onAgua:  () => {},
+            onLama:  () => verificarFimDeJogo(),  // Lama agora também pode matar o jogador (reduzir a vida a 0)
+            onAgua:  () => {    // água = fim de jogo imediato
+                player.vidas = 0;
+                verificarFimDeJogo();
+            },
             onTurbo: () => {},
         });
 
@@ -113,7 +116,7 @@ function processar(delta) {
     }
 
     if (estado === ESTADOS.PAUSA) {
-        if (teclaPressionada(TECLAS.ESC) || teclaPressionada(TECLAS.ENTER)) {
+        if (teclaPressionadaAgora(TECLAS.ESC) || teclaPressionadaAgora(TECLAS.ENTER)) {
             definirEstado(ESTADOS.JOGANDO);
         }
         return;
@@ -183,26 +186,12 @@ function desenharHUD() {
     ctx.fillText(`Dist: ${getDistancia()}m`, LARGURA_TELA - 10, 38);
     ctx.fillText(`Rec: ${getRecorde()}`, LARGURA_TELA - 10, 56);
 
-    // ── Barra de wheelie (esquerda do centro) ──────────────────────────────
-    const emp       = getEmpinada(player);
-    const wLargura  = 120;
-    const wX        = (LARGURA_TELA / 2) - wLargura - 20;
-    const wProp     = emp.tempoAtual / emp.tempoMax;
+    // Barra de wheelie removida
 
-    ctx.fillStyle = '#333';
-    ctx.fillRect(wX, barY, wLargura, barAltura);
-    ctx.fillStyle = wProp > 0.7 ? '#ff4400' : '#ffcc00';
-    ctx.fillRect(wX, barY, wLargura * wProp, barAltura);
-
-    ctx.fillStyle = '#ffffff';
-    ctx.font      = '11px monospace';
-    ctx.textAlign = 'center';
-    ctx.fillText(emp.caido ? 'CAÍDO!' : 'WHEELIE', wX + wLargura / 2, barY - 3);
-
-    // ── Barra de turbo (direita do centro) ────────────────────────────────
+    // ── Barra de turbo (centro) ───────────────────────────────────────────
     const turbo    = getTurbo(player);
-    const tLargura = 120;
-    const tX       = (LARGURA_TELA / 2) + 20;
+    const tLargura = 160; // Aumentei um pouco a barra de turbo já que é a única no centro
+    const tX       = (LARGURA_TELA / 2) - (tLargura / 2); // Centrada perfeitamente
 
     ctx.fillStyle = '#333';
     ctx.fillRect(tX, barY, tLargura, barAltura);
@@ -212,15 +201,18 @@ function desenharHUD() {
         ctx.fillStyle = Math.floor(Date.now() / 100) % 2 === 0 ? '#00e5ff' : '#ffffff';
         ctx.fillRect(tX, barY, tLargura * tProp, barAltura);
         ctx.fillStyle = '#ffffff';
-        ctx.fillText('TURBO ATIVO!', tX + tLargura / 2, barY - 3);
+        ctx.textAlign = 'center';
+        ctx.fillText('TURBO ATIVO!', LARGURA_TELA / 2, barY - 3);
     } else if (turbo.carregado) {
         ctx.fillStyle = '#00e5ff';
         ctx.fillRect(tX, barY, tLargura, barAltura);
         ctx.fillStyle = '#000000';
-        ctx.fillText('TURBO [Z]', tX + tLargura / 2, barY - 3);
+        ctx.textAlign = 'center';
+        ctx.fillText('TURBO [Z]', LARGURA_TELA / 2, barY - 3);
     } else {
         ctx.fillStyle = '#ffffff';
-        ctx.fillText('SEM TURBO', tX + tLargura / 2, barY - 3);
+        ctx.textAlign = 'center';
+        ctx.fillText('SEM TURBO', LARGURA_TELA / 2, barY - 3);
     }
 }
 
@@ -238,13 +230,12 @@ function desenharTelaInicio() {
     ctx.fillStyle = '#aaaaaa';
     ctx.font      = '12px monospace';
     ctx.fillText('↑ ↓  Mudar faixa', LARGURA_TELA / 2, ALTURA_TELA / 2 + 30);
-    ctx.fillText('← →  Empinar / Abaixar', LARGURA_TELA / 2, ALTURA_TELA / 2 + 48);
-    ctx.fillText('Z    Ativar turbo (quando carregado)', LARGURA_TELA / 2, ALTURA_TELA / 2 + 66);
-    ctx.fillText('ESC  Pausar', LARGURA_TELA / 2, ALTURA_TELA / 2 + 84);
+    ctx.fillText('Z    Ativar turbo (quando carregado)', LARGURA_TELA / 2, ALTURA_TELA / 2 + 48);
+    ctx.fillText('ESC  Pausar', LARGURA_TELA / 2, ALTURA_TELA / 2 + 66);
 
     ctx.fillStyle = '#555';
     ctx.font      = '12px monospace';
-    ctx.fillText(`Recorde: ${getRecorde()} pts`, LARGURA_TELA / 2, ALTURA_TELA / 2 + 114);
+    ctx.fillText(`Recorde: ${getRecorde()} pts`, LARGURA_TELA / 2, ALTURA_TELA / 2 + 104);
 }
 
 function desenharTelaPausa() {

@@ -1,4 +1,5 @@
 import { NUM_FAIXAS, getPosFaixa, getLimitesPista } from "./pista.js";
+import { getObstaculos } from "./obstaculos.js"; // Importamos os obstáculos para verificar a colisão de spawn
 
 export const TIPO_ITEM = {
     MOEDA: 'moeda',
@@ -20,7 +21,7 @@ const CONFIG_ITEM = {
     },
 };
 
-const CHANCE_TURBO          = 0.10;
+const CHANCE_TURBO          = 0.03;
 const INTERVALO_SPAWN_MIN   = 60;
 const INTERVALO_SPAWN_MAX   = 120;
  
@@ -35,16 +36,44 @@ export function resetarItens() {
 }
 
 function criarItem(larguraTela, alturaTela, velocidadeGlobal) {
+    const obstaculos = getObstaculos();
+    const spawnX = larguraTela + 20;
+    const MARGEM_SEGURANCA = 140; // Distância mínima entre o item e um obstáculo no spawn
+
+    // Verifica quais faixas estão livres de obstáculos na zona de spawn
+    const faixasPossiveis = [];
+    for (let i = 0; i < NUM_FAIXAS; i++) {
+        let faixaLivre = true;
+        for (const obs of obstaculos) {
+            // Se o obstáculo estiver na mesma faixa e perto do ponto X de spawn
+            if (obs.faixa === i && Math.abs(obs.x - spawnX) < MARGEM_SEGURANCA) {
+                faixaLivre = false;
+                break;
+            }
+        }
+        if (faixaLivre) {
+            faixasPossiveis.push(i);
+        }
+    }
+
+    // Se todas as faixas estiverem ocupadas neste exato momento, 
+    // retorna null para abortar e tentar novamente no próximo frame.
+    if (faixasPossiveis.length === 0) {
+        return null;
+    }
+
     const tipo    = Math.random() < CHANCE_TURBO ? TIPO_ITEM.TURBO : TIPO_ITEM.MOEDA;
     const config  = CONFIG_ITEM[tipo];
-    const faixa   = Math.floor(Math.random() * NUM_FAIXAS);
+    
+    // Escolhe uma faixa aleatória apenas entre as que estão seguras
+    const faixa   = faixasPossiveis[Math.floor(Math.random() * faixasPossiveis.length)];
     const limites = getLimitesPista(alturaTela);
     const centroY = getPosFaixa(faixa, limites);
  
     return {
         tipo,
         faixa,
-        x:          larguraTela + 20,
+        x:          spawnX,
         y:          centroY - config.altura / 2,
         largura:    config.largura,
         altura:     config.altura,
@@ -61,10 +90,15 @@ export function atualizarItens(larguraTela, alturaTela, velocidadeGlobal, delta)
     contadorFrames++;
  
     if (contadorFrames >= frameProxSpawn) {
-        itensAtivos.push(criarItem(larguraTela, alturaTela, velocidadeGlobal));
-        contadorFrames = 0;
-        frameProxSpawn = INTERVALO_SPAWN_MIN +
-            Math.floor(Math.random() * (INTERVALO_SPAWN_MAX - INTERVALO_SPAWN_MIN));
+        const novoItem = criarItem(larguraTela, alturaTela, velocidadeGlobal);
+        
+        // Só reseta o contador se conseguiu criar o item com sucesso numa faixa segura
+        if (novoItem) {
+            itensAtivos.push(novoItem);
+            contadorFrames = 0;
+            frameProxSpawn = INTERVALO_SPAWN_MIN +
+                Math.floor(Math.random() * (INTERVALO_SPAWN_MAX - INTERVALO_SPAWN_MIN));
+        }
     }
  
     for (const item of itensAtivos) {
@@ -157,4 +191,3 @@ function desenharItemTurbo(ctx, item, largura, altura, offsetX, offsetY) {
 export function getItens() {
     return itensAtivos;
 }
-

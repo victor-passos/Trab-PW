@@ -1,4 +1,5 @@
 import { TIPO_OBSTACULO } from './obstaculos.js';
+import { ativarInvulnerabilidadePosDano } from './player.js';
 
 export const RESULTADO_COLISAO = {
     NENHUM: 'nenhum',
@@ -13,7 +14,7 @@ const HITBOX = 4;
 
 function getHitbox(entidade) {
     return {
-        x:entidade.x + HITBOX,
+        x: entidade.x + HITBOX,
         y: entidade.y + HITBOX,
         largura: entidade.largura - HITBOX * 2,
         altura: entidade.altura  - HITBOX * 2,
@@ -36,14 +37,14 @@ function colidindo(a, b) {
 export function verificarColisoes(player, obstaculos, itens) {
     const resultados = [];
  
-    // Player invulnerável (turbo ativo) — ignora dano mas coleta itens
-    const invulneravel = player.turboAtivo;
+    // Player invulnerável se o turbo estiver ativo OU se estiver no período de segurança pós-dano
+    const invulneravel = player.turboAtivo || player.invulneravelPosDano;
  
     // Obstáculos 
     for (const obs of obstaculos) {
         if (!colidindo(player, obs)) continue;
  
-        if (invulneravel) continue; // turbo ignora todos os obstáculos
+        if (invulneravel) continue; // Turbo e invulnerabilidade ignoram todos os obstáculos de dano/lentidão
  
         switch (obs.tipo) {
             case TIPO_OBSTACULO.LAMA:
@@ -59,7 +60,7 @@ export function verificarColisoes(player, obstaculos, itens) {
         }
     }
     
-    // Itens
+    // Itens (Moedas e Turbos são recolhidos normalmente, mesmo estando invulnerável)
     for (const item of itens) {
         if (item.coletado) continue;
         if (!colidindo(player, item)) continue;
@@ -85,24 +86,40 @@ export function aplicarColisoes(player, resultados, callbacks) {
         switch (resultado.tipo) {
  
             case RESULTADO_COLISAO.DANO:
-                if (!danoAplicado) {
+                if (!danoAplicado && !player.invulneravelPosDano) {
                     player.vidas--;
                     danoAplicado = true;
+                    
+                    // Ativa a proteção temporária imediatamente após a perda de vida
+                    ativarInvulnerabilidadePosDano(player);
+                    
                     if (callbacks.onDano) callbacks.onDano(player);
                 }
                 break;
  
             case RESULTADO_COLISAO.LAMA:
-                // reduz velocidade gradualmente
+                // Reduz velocidade gradualmente
                 player.velocidade = Math.max(
                     player.velocidade * 0.85,
                     1
                 );
+
+                // Aplica dano ao jogador e ativa a invulnerabilidade
+                if (!danoAplicado && !player.invulneravelPosDano) {
+                    player.vidas--;
+                    danoAplicado = true;
+                    
+                    // Ativa a proteção temporária
+                    ativarInvulnerabilidadePosDano(player);
+                    
+                    if (callbacks.onDano) callbacks.onDano(player);
+                }
+                
                 if (callbacks.onLama) callbacks.onLama(player);
                 break;
  
             case RESULTADO_COLISAO.AGUA:
-                // para completamente na faixa bloqueada
+                // Para completamente na faixa bloqueada
                 player.velocidade = 0;
                 if (callbacks.onAgua) callbacks.onAgua(player);
                 break;

@@ -1,26 +1,20 @@
 import { teclaPressionada, TECLAS } from './input.js';
 import { NUM_FAIXAS, getPosFaixa } from './pista.js';
 
-
 // Constantes de movimento
 const TAMX = 24;
 const TAMY = 16;
 const VEL_LATERAL = 0.2;
 
-//Constantes de empinada
-const EMPINADA_MAX = 0.5;
-const EMPINADA_MIN = -0.25;
-const VEL_EMPINADA = 0.03;
-const EMPINADA_RETONRO = 0.05;
-const TEMPO_EMPINADA_MAX = 90;
-const DURACAO_CAIDA = 150;
-
 // Item Turbo
-const DURACAO_TURBO = 180;
+const DURACAO_TURBO = 210;
 const MULTIPLICADOR_TURBO = 1.8;
 const EMPINADA_TURBO = 0.4;
 const VEL_EMPINADA_TURBO = 0.04;
+const EMPINADA_RETORNO = 0.05;
 
+// Constantes de invulnerabilidade pós-dano
+const DURACAO_INVULNERABILIDADE = 90; // Cerca de 1.5 segundos a 60 FPS
 
 export function criarPlayer(larguraTela, alturaTela){
     return {
@@ -35,15 +29,13 @@ export function criarPlayer(larguraTela, alturaTela){
         faixaAtual: 3,
         yDestino: 0,
         teclaFaixaAtiva: false,
-        empinada: 0,
-        tempoEmpinada: 0,
-        caido: false,
-        tempoCaida: 0,
+        empinada: 0, // Mantido apenas para efeito visual do turbo
         turboCarregado: false,
         turboAtivo: false,
         tempoDuracao: 0,
         teclaTurboAtiva: false,
-
+        invulneravelPosDano: false,
+        tempoInvulnerabilidade: 0
     };
 }
 
@@ -57,6 +49,14 @@ export function atualizarPlayer(player, larguraTela, alturaPista, velocidadeGlob
     const margemBase  = alturaPista.base - player.altura;
     if (player.y < margemTopo)  player.y = margemTopo;
     if (player.y > margemBase)  player.y = margemBase;
+
+    // Atualiza o temporizador de invulnerabilidade pós-dano
+    if (player.invulneravelPosDano) {
+        player.tempoInvulnerabilidade--;
+        if (player.tempoInvulnerabilidade <= 0) {
+            player.invulneravelPosDano = false;
+        }
+    }
 
     if(!teclaPressionada(TECLAS.BAIXO) && !teclaPressionada(TECLAS.CIMA)){
         player.teclaFaixaAtiva = false;
@@ -72,18 +72,8 @@ export function atualizarPlayer(player, larguraTela, alturaPista, velocidadeGlob
         }
     }
 
-    player.yDestino = getPosFaixa(player.faixaAtual, alturaPista) - player.altura/2; //atualiza yDestino com base na faixa atual
-    player.y += (player.yDestino - player.y) * VEL_LATERAL; //animação de transição
-
-    if(player.caido){
-        player.tempoCaida--;
-        player.empinada = Math.max(player.empinada - EMPINADA_RETONRO * 2, 0);
-        if(player.tempoCaida <= 0){
-            player.caido = false;
-            player.velocidade = 0;
-        }
-        return;
-    }
+    player.yDestino = getPosFaixa(player.faixaAtual, alturaPista) - player.altura/2; 
+    player.y += (player.yDestino - player.y) * VEL_LATERAL; 
 
     if (!teclaPressionada(TECLAS.TURBO)) {
         player.teclaTurboAtiva = false;
@@ -96,9 +86,10 @@ export function atualizarPlayer(player, larguraTela, alturaPista, velocidadeGlob
         player.tempoDuracao    = DURACAO_TURBO;
     }
 
-        if (player.turboAtivo) {
+    if (player.turboAtivo) {
         player.tempoDuracao--;
         player.velocidade = velocidadeGlobal * MULTIPLICADOR_TURBO;
+        // Efeito visual de empinar ao ativar o turbo
         player.empinada = Math.min(player.empinada + VEL_EMPINADA_TURBO, EMPINADA_TURBO);
  
         if (player.tempoDuracao <= 0) {
@@ -109,36 +100,24 @@ export function atualizarPlayer(player, larguraTela, alturaPista, velocidadeGlob
 
     player.velocidade = velocidadeGlobal;
 
-    //Empinada
-    if(teclaPressionada(TECLAS.ESQUERDA)){
-        player.empinada = Math.min(player.empinada + VEL_EMPINADA, EMPINADA_MAX);
-        if(player.empinada >=  EMPINADA_MAX * 0.7){
-            player.tempoEmpinada++;
-        }
-
-        if(player.tempoEmpinada >= TEMPO_EMPINADA_MAX){
-            player.caido = true;
-            player.tempoCaida = DURACAO_CAIDA;
-            player.tempoEmpinada = 0;
-            player.velocidade = 0;
-            return;
-        }
-
-    } else if( teclaPressionada(TECLAS.DIREITA)){
-        player.empinada = Math.max(player.empinada - VEL_EMPINADA, EMPINADA_MIN);
-        player.tempoEmpinada = Math.max(player.tempoEmpinada - 2, 0);
-    } else{
-        if(player.empinada > 0){
-            player.empinada = Math.max(player.empinada - EMPINADA_RETONRO, 0);
-        } else if(player.empinada < 0){
-            player.empinada = Math.min(player.empinada + EMPINADA_RETONRO, 0)
-        }
-        player.tempoEmpinada = Math.max(player.tempoEmpinada - 1, 0);
+    // Retorno suave da empinada visual quando o turbo acaba
+    if(player.empinada > 0){
+        player.empinada = Math.max(player.empinada - EMPINADA_RETORNO, 0);
     }
 }
 
+// Ativa o estado de invulnerabilidade do jogador
+export function ativarInvulnerabilidadePosDano(player) {
+    player.invulneravelPosDano = true;
+    player.tempoInvulnerabilidade = DURACAO_INVULNERABILIDADE;
+}
 
 export function desenharPlayer(ctx, player) {
+    // Efeito clássico de piscar
+    if (player.invulneravelPosDano && Math.floor(Date.now() / 50) % 2 === 0) {
+        return;
+    }
+
     const pivotX = player.x + player.largura * 0.25;
     const pivotY = player.y + player.altura;
 
@@ -149,28 +128,18 @@ export function desenharPlayer(ctx, player) {
 
     if(player.turboAtivo){
         ctx.fillStyle = '#00e5ff';
-         ctx.shadowBlur  = 12;
-    } else if(player.caido){
-        ctx.fillStyle = '#ffff00'
-    }else{
+        ctx.shadowBlur  = 12;
+    } else {
         ctx.fillStyle = player.cor;
     }
     ctx.fillRect(player.x, player.y, player.largura, player.altura);
  
-    // Ponto de referência (roda dianteira) — só para debug visual
+    // Ponto de referência (roda dianteira)
     ctx.shadowBlur = 0;
     ctx.fillStyle = '#ffffff';
     ctx.fillRect(player.x + player.largura - 4, player.y + player.altura - 4, 4, 4);
 
     ctx.restore();
-}
-
-export function getEmpinada(player) {
-    return {
-        tempoAtual: player.tempoEmpinada,
-        tempoMax: TEMPO_EMPINADA_MAX,
-        caido: player.caido,
-    };
 }
  
 export function getTurbo(player) {
@@ -181,6 +150,3 @@ export function getTurbo(player) {
         tempoMax: DURACAO_TURBO,
     };
 }
-
-
-//export function getEmpinada(player){return{ tempoAtual: player.tempoEmpinada, tempoMax: TEMPO_EMPINADA_MAX, caido: player.caido,}}
