@@ -1,5 +1,5 @@
 const CHAVE_RECORDE = 'excitebike_recorde';
-const PONTOS_MOEDA = 10;
+const PONTOS_MOEDA = 150;
  
 let pontuacao = 0;
 let distancia = 0;
@@ -47,12 +47,6 @@ export function getMoedas()     { return totalMoedas; }
 
 export function finalizarPlacar() {
     const novoRecorde = salvarRecorde();
-    return {
-        pontuacao,
-        distancia: Math.floor(distancia),
-        moedas: totalMoedas,
-        novoRecorde,
-        recorde,
-    };
+    return { pontuacao, distancia: Math.floor(distancia), moedas: totalMoedas, novoRecorde, recorde };
 }
 

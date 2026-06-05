@@ -1,21 +1,294 @@
-*{
-    margin: 0;
-    padding: 0;
+body { 
+    margin: 0; 
+    padding: 20px; 
+    background-color: #222; 
+    display: flex; 
+    justify-content: center; 
+    align-items: center; 
+    height: 100vh; 
+    box-sizing: border-box;
+    color: #fff; 
+    font-family: monospace; 
+    user-select: none;
+}
+ 
+/* Contentor Principal do Jogo */
+#game-container {
+    width: 800px;
+    height: 400px;
+    position: relative;
+    overflow: hidden;
+    background-color: #000;
+    box-shadow: 0 0 25px rgba(0, 229, 255, 0.25);
+    border: 3px solid #333;
+}
+ 
+/* Pista de Corrida */
+#pista-bg {
+    position: absolute;
+    top: 80px;      /* 20% da altura do ecrã */
+    left: 0;
+    width: 100%;
+    height: 240px;  /* 60% da altura do ecrã */
+    background-color: #b07242; /* Cor clássica de terra batida */
+    border-top: 4px solid #3cb400;
+    border-bottom: 4px solid #3cb400;
     box-sizing: border-box;
 }
-
-body {
-    background-color: #111;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-    overflow: hidden;
+ 
+/* Linhas Divisórias das Faixas */
+.faixa-linha {
+    position: absolute;
+    width: 100%;
+    height: 1px;
+    background-color: rgba(255, 255, 255, 0.5);
 }
-
-#tela {
-    background-color: #1a1a2e;
-    display: block;
-    border: 2px solid #444;
+ 
+/* Linhas Tracejadas (Movimento com background-position) */
+#marcacoes {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background-image: url("data:image/svg+xml,%3Csvg width='80' height='240' xmlns='http://www.w3.org/2000/svg'%3E%3Cline x1='0' y1='0' x2='0' y2='240' stroke='%23ffa560' stroke-width='2' stroke-dasharray='8,8'/%3E%3C/svg%3E");
+    background-repeat: repeat-x;
+    will-change: background-position-x;
 }
-
+ 
+/* Contentor Geral de Entidades Ativas */
+#entidades {
+    position: absolute; 
+    top: 0; 
+    left: 0; 
+    width: 100%; 
+    height: 100%; 
+    z-index: 10;
+}
+ 
+/* Elemento Visual do Jogador (Mota) */
+#player {
+    position: absolute;
+    width: 24px; 
+    height: 16px;
+    background-color: #00ff00;
+    transform-origin: 25% 100%;
+    will-change: transform, left, top, opacity;
+    z-index: 15;
+    transition: background-color 0.1s;
+}
+ 
+/* Roda Dianteira da Mota */
+.player-front {
+    position: absolute;
+    right: 0; 
+    bottom: 0;
+    width: 4px; 
+    height: 4px;
+    background-color: #fff;
+}
+ 
+/* Balão de Notificação do Turbo por cima da Mota */
+#player-indicador {
+    position: absolute;
+    color: #00e5ff;
+    font-weight: bold;
+    font-size: 11px;
+    text-align: center;
+    display: none;
+    transform: translateX(-50%);
+    z-index: 16;
+    will-change: left, top, opacity;
+}
+ 
+/* Classes Gerais de Obstáculos */
+.obstaculo { 
+    position: absolute; 
+    box-sizing: border-box; 
+    box-shadow: 2px 2px 0 rgba(0,0,0,0.25); 
+    will-change: left;
+}
+ 
+/* Lama: Dano suave e Desaceleração */
+.obs-lama { 
+    background-color: #6b3d0f; 
+    border: 1.5px solid #4a2a08; 
+    border-radius: 4px;
+}
+.obs-lama .dot { 
+    position: absolute; 
+    width: 4px; 
+    height: 4px; 
+    background: rgba(255,255,255,0.15); 
+    border-radius: 50%; 
+    top: 50%; 
+    transform: translateY(-50%); 
+}
+ 
+/* Água: Ocupa toda a faixa e causa derrota imediata */
+.obs-agua { 
+    background-color: #1a6bbf; 
+    border: 2px solid #0d4a8a; 
+}
+.obs-agua::after { 
+    content: ""; 
+    position: absolute; 
+    top: 0; left: 0; width: 100%; height: 100%; 
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='15'%3E%3Cpath d='M0,8 L8,4 L16,8' stroke='rgba%28255,255,255,0.35%29' stroke-width='1.5' fill='none'/%3E%3C/svg%3E"); 
+}
+ 
+/* Veículos Adversários */
+.obs-veiculo { 
+    background-color: #e03030; 
+    border: 1.5px solid #991010; 
+    border-radius: 2px;
+}
+.obs-veiculo .window { 
+    position: absolute; 
+    left: 4px; 
+    top: 3px; 
+    background-color: #88ccff; 
+}
+ 
+/* Projéteis Rápidos (Balas) */
+.obs-bala { 
+    background-color: #ffee00; 
+    border: 1.5px solid #cc9900; 
+    clip-path: polygon(30% 0, 100% 0, 100% 100%, 30% 100%, 0 50%); 
+}
+ 
+/* Classes Gerais de Itens Colecionáveis */
+.item { 
+    position: absolute; 
+    box-sizing: border-box; 
+    display: flex; 
+    justify-content: center; 
+    align-items: center; 
+    font-weight: bold; 
+    will-change: transform, left;
+}
+.item-moeda { 
+    background-color: #ffd700; 
+    border: 1.5px solid #cc9900; 
+    border-radius: 50%; 
+    color: #cc9900; 
+    font-size: 8px; 
+    filter: drop-shadow(0 0 4px rgba(255, 215, 0, 0.7));
+}
+.item-turbo { 
+    background-color: #00e5ff; 
+    clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%); 
+    color: #000; 
+    font-size: 10px; 
+    filter: drop-shadow(0 0 5px rgba(0, 229, 255, 0.75));
+}
+ 
+/* Interface HUD */
+#hud { 
+    position: absolute; 
+    top: 0; left: 0; width: 100%; height: 100%; 
+    pointer-events: none; 
+    z-index: 20; 
+}
+.hud-topo { 
+    position: absolute; 
+    top: 15px; 
+    width: 100%; 
+    display: flex; 
+    justify-content: space-between; 
+    padding: 0 15px; 
+    box-sizing: border-box; 
+    font-size: 14px; 
+    text-shadow: 1px 1px 1px #000; 
+}
+.hud-topo .coluna { 
+    display: flex; 
+    flex-direction: column; 
+    gap: 4px; 
+}
+.hud-topo .direita { 
+    text-align: right; 
+}
+ 
+/* Painel Inferior do Turbo */
+.hud-bottom { 
+    position: absolute; 
+    bottom: 24px; 
+    width: 100%; 
+    display: flex; 
+    justify-content: center; 
+}
+#hud-turbo-container { 
+    position: relative; 
+    width: 160px; 
+}
+#hud-turbo-text { 
+    position: absolute; 
+    top: -16px; 
+    width: 100%; 
+    text-align: center; 
+    font-size: 11px; 
+    font-weight: bold;
+}
+.turbo-bar-bg { 
+    width: 100%; 
+    height: 12px; 
+    background-color: #333; 
+    border: 1px solid #555;
+}
+#hud-turbo-fill { 
+    height: 100%; 
+    width: 0%; 
+    background-color: #00e5ff; 
+}
+ 
+/* Indicador Central de Tecla Z */
+#hud-z-indicator { 
+    position: absolute; 
+    top: -42px; 
+    left: 50%; 
+    transform: translateX(-50%); 
+    display: none; 
+}
+.z-key { 
+    width: 22px; 
+    height: 22px; 
+    border: 2px solid #000; 
+    display: flex; 
+    justify-content: center; 
+    align-items: center; 
+    font-weight: bold; 
+    font-size: 14px; 
+    color: #000; 
+    background-color: #fff; 
+    box-shadow: 1px 1px 0 rgba(255,255,255,0.25);
+}
+ 
+/* Ecrãs e Menus do Jogo */
+.tela { 
+    position: absolute; 
+    top: 0; left: 0; width: 100%; height: 100%; 
+    display: none; 
+    flex-direction: column; 
+    justify-content: center; 
+    align-items: center; 
+    z-index: 30; 
+    text-align: center; 
+}
+#tela-inicio { 
+    background-color: #000; 
+    display: flex; 
+}
+#tela-pausa { 
+    background-color: rgba(0,0,0,0.65); 
+}
+#tela-fim { 
+    background-color: rgba(0,0,0,0.9); 
+}
+ 
+h1 { color: #00e5ff; font-size: 38px; margin-bottom: 40px; text-shadow: 2px 2px 0 #333; }
+h2 { color: #e8c840; font-size: 32px; margin-bottom: 30px; margin-top: 0; }
+.texto-principal { font-size: 15px; margin-bottom: 30px; }
+.controles { color: #aaaaaa; font-size: 12px; line-height: 1.6; margin-bottom: 30px; }
+.recorde-texto { color: #555; font-size: 12px; }
+ 
+#fim-titulo { color: #ff4444; font-size: 36px; font-weight: bold; margin-bottom: 40px; margin-top: 0; }
+#fim-recorde-msg { font-size: 18px; font-weight: bold; margin-bottom: 25px; }
+.fim-stats { font-size: 14px; line-height: 1.6; margin-bottom: 30px; }
