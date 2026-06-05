@@ -113,18 +113,29 @@ export function ativarInvulnerabilidadePosDano(player) {
 }
 
 export function desenharPlayer(ctx, player) {
-    // Efeito clássico de piscar
     if (player.invulneravelPosDano && Math.floor(Date.now() / 50) % 2 === 0) {
         return;
     }
+
+    // --- ANIMAÇÃO DE VIBRAÇÃO DO MOTOR ---
+    // Se o turbo estiver ativo, a vibração é mais rápida e agressiva
+    const velocidadeVibracao = player.turboAtivo ? 8 : 15; 
+    const amplitudeVibracao = player.turboAtivo ? 2.0 : 1.0; // Amplitude em pixels
+    
+    // Calcula um pequeno deslocamento vertical usando uma onda senoidal baseada no tempo atual
+    const vibracaoY = Math.sin(Date.now() / velocidadeVibracao) * amplitudeVibracao;
 
     const pivotX = player.x + player.largura * 0.25;
     const pivotY = player.y + player.altura;
 
     ctx.save();
+    
+    // Aplica a vibração deslocando todo o contexto levemente no eixo Y
+    ctx.translate(0, vibracaoY);
+
     ctx.translate(pivotX, pivotY);
     ctx.rotate(-player.empinada);
-    ctx.translate(-pivotX, -pivotY)
+    ctx.translate(-pivotX, -pivotY);
 
     if(player.turboAtivo){
         ctx.fillStyle = '#00e5ff';

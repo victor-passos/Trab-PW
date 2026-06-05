@@ -196,6 +196,9 @@ function desenharHUD() {
     ctx.fillStyle = '#333';
     ctx.fillRect(tX, barY, tLargura, barAltura);
 
+    ctx.fillStyle = '#333';
+    ctx.fillRect(tX, barY, tLargura, barAltura);
+
     if (turbo.ativo) {
         const tProp   = turbo.tempoAtual / turbo.tempoMax;
         ctx.fillStyle = Math.floor(Date.now() / 100) % 2 === 0 ? '#00e5ff' : '#ffffff';
@@ -206,9 +209,33 @@ function desenharHUD() {
     } else if (turbo.carregado) {
         ctx.fillStyle = '#00e5ff';
         ctx.fillRect(tX, barY, tLargura, barAltura);
+        
+        // -- INDICADOR VISUAL TECLA Z NO CENTRO --
+        const piscando = Math.floor(Date.now() / 200) % 2 === 0;
+        const indTam = 22;
+        const indX = (LARGURA_TELA / 2) - (indTam / 2);
+        const indY = barY - 30; // Posicionado acima do texto "TURBO PRONTO"
+
+        // Fundo da tecla
+        ctx.fillStyle = piscando ? '#ffeb3b' : '#ffffff';
+        ctx.fillRect(indX, indY, indTam, indTam);
+        
+        // Borda da tecla
+        ctx.strokeStyle = '#000000';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(indX, indY, indTam, indTam);
+
+        // Letra Z
         ctx.fillStyle = '#000000';
+        ctx.font = 'bold 16px monospace';
         ctx.textAlign = 'center';
-        ctx.fillText('TURBO [Z]', LARGURA_TELA / 2, barY - 3);
+        ctx.fillText('Z', indX + indTam / 2, indY + 16);
+
+        // Texto principal
+        ctx.fillStyle = '#00e5ff';
+        ctx.font = '12px monospace';
+        ctx.fillText('TURBO PRONTO', LARGURA_TELA / 2, barY - 6);
+
     } else {
         ctx.fillStyle = '#ffffff';
         ctx.textAlign = 'center';
