@@ -7,7 +7,77 @@
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-    <canvas id = "tela"></canvas>
+        <div id="game-container">
+        
+        <!-- Elementos do Cenário e Pista -->
+        <div id="pista-bg">
+            <div id="faixas"></div>
+            <div id="marcacoes"></div>
+        </div>
+ 
+        <!-- Árvore do DOM para Entidades Ativas -->
+        <div id="entidades">
+            <div id="player">
+                <div class="player-front"></div>
+            </div>
+            <div id="player-indicador">[Z]</div>
+        </div>
+ 
+        <!-- Painel de Interface HUD -->
+        <div id="hud">
+            <div class="hud-topo">
+                <div class="coluna">
+                    <div>Vidas: <span id="hud-vidas">3</span></div>
+                    <div>Pontos: <span id="hud-pontos">0</span></div>
+                    <div>Moedas: <span id="hud-moedas">0</span></div>
+                </div>
+                <div class="coluna direita">
+                    <div>Vel: <span id="hud-vel">5.0</span></div>
+                    <div>Dist: <span id="hud-dist">0</span>m</div>
+                    <div>Recorde: <span id="hud-rec">0</span></div>
+                </div>
+            </div>
+            <div class="hud-bottom">
+                <div id="hud-turbo-container">
+                    <div id="hud-z-indicator">
+                        <div class="z-key">Z</div>
+                    </div>
+                    <div id="hud-turbo-text">SEM TURBO</div>
+                    <div class="turbo-bar-bg">
+                        <div id="hud-turbo-fill"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+ 
+        <!-- Ecrã de Boas-Vindas / Início -->
+        <div id="tela-inicio" class="tela">
+            <h1>EXCITEBIKE JS</h1>
+            <div class="texto-principal">Prime ENTER ou ESPAÇO para iniciar a corrida</div>
+            <div class="controles">
+                ↑ ↓  Mudar de faixa de rodagem<br>
+                Z    Ativar Turbo (quando disponível)<br>
+                ESC  Pausar jogo
+            </div>
+            <div class="recorde-texto">Recorde Atual: <span id="inicio-recorde">0</span> pts</div>
+        </div>
+ 
+        <!-- Ecrã de Pausa -->
+        <div id="tela-pausa" class="tela">
+            <h2>PAUSA</h2>
+            <div class="texto-principal">ESC ou ENTER para retomar a corrida</div>
+        </div>
+ 
+        <!-- Ecrã de Fim de Jogo (Resultados) -->
+        <div id="tela-fim" class="tela">
+            <div id="fim-titulo">FIM DE JOGO</div>
+            <div id="fim-recorde-msg">Pontuação obtida: 0 pts</div>
+            <div class="fim-stats" id="fim-stats-container"></div>
+            <div class="controles">ENTER ou ESPAÇO para voltar ao menu inicial</div>
+        </div>
+ 
+    </div>
+ 
     <script type="module" src="js/game.js"></script>
 </body>
 </html>

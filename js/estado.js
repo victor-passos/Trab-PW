@@ -11,11 +11,12 @@ export function getEstado() {
     return estadoAtual;
 }
  
-export function definirEstado(novoEstado) {
-    if (!Object.values(ESTADOS).includes(novoEstado)) {
-        console.warn(`Estado desconhecido: ${novoEstado}`);
-        return;
-    }
-    console.log(`Estado: ${estadoAtual} -> ${novoEstado}`);
+export function definirEstado(novoEstado, els) {
     estadoAtual = novoEstado;
+    if (els) {
+        els.telas.forEach(t => t.style.display = 'none');
+        if (novoEstado === ESTADOS.INICIO)  els.inicio.style.display = 'flex';
+        if (novoEstado === ESTADOS.PAUSA)   els.pausa.style.display  = 'flex';
+        if (novoEstado === ESTADOS.FIM)     els.fim.style.display    = 'flex';
+    }
 }

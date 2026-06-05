@@ -1,56 +1,41 @@
 import { teclaPressionada, TECLAS } from './input.js';
 import { NUM_FAIXAS, getPosFaixa } from './pista.js';
 
-// Constantes de movimento
 const TAMX = 24;
 const TAMY = 16;
 const VEL_LATERAL = 0.2;
-
-// Item Turbo
-const DURACAO_TURBO = 210;
+const DURACAO_TURBO = 180;
 const MULTIPLICADOR_TURBO = 1.8;
 const EMPINADA_TURBO = 0.4;
 const VEL_EMPINADA_TURBO = 0.04;
 const EMPINADA_RETORNO = 0.05;
-
-// Constantes de invulnerabilidade pós-dano
-const DURACAO_INVULNERABILIDADE = 90; // Cerca de 1.5 segundos a 60 FPS
+const DURACAO_INVULNERABILIDADE = 90;
 
 export function criarPlayer(larguraTela, alturaTela){
     return {
-        x: 100,
-        y: 0,
-        largura: TAMX,
-        altura: TAMY,
-        velocidade: 0,
-        cor: '#00ff00',
-        vidas: 3,
-        pontuacao: 0,
-        faixaAtual: 3,
-        yDestino: 0,
-        teclaFaixaAtiva: false,
-        empinada: 0, // Mantido apenas para efeito visual do turbo
-        turboCarregado: false,
-        turboAtivo: false,
-        tempoDuracao: 0,
-        teclaTurboAtiva: false,
-        invulneravelPosDano: false,
-        tempoInvulnerabilidade: 0
+        x: 100, y: 0, largura: TAMX, altura: TAMY, velocidade: 0, cor: '#00ff00',
+        vidas: 3, pontuacao: 0, faixaAtual: 3, yDestino: 0, teclaFaixaAtiva: false, empinada: 0, 
+        turboCarregado: false, turboAtivo: false, tempoDuracao: 0, teclaTurboAtiva: false,
+        invulneravelPosDano: false, tempoInvulnerabilidade: 0
     };
 }
+
+// Criado um alias para evitar erros caso o game.js chame criarPlayerLogico()
+export const criarPlayerLogico = criarPlayer;
 
 export function iniciarFaixa(player, alturaPista){
     player.y = getPosFaixa(player.faixaAtual, alturaPista) - player.altura/2;
     player.yDestino = player.y;
 }
 
-export function atualizarPlayer(player, larguraTela, alturaPista, velocidadeGlobal){  
+// CORREÇÃO: O argumento 'larguraTela' foi removido para bater certo com a chamada do game.js
+export function atualizarPlayer(player, alturaPista, velocidadeGlobal){  
     const margemTopo  = alturaPista.topo;
     const margemBase  = alturaPista.base - player.altura;
+    
     if (player.y < margemTopo)  player.y = margemTopo;
     if (player.y > margemBase)  player.y = margemBase;
 
-    // Atualiza o temporizador de invulnerabilidade pós-dano
     if (player.invulneravelPosDano) {
         player.tempoInvulnerabilidade--;
         if (player.tempoInvulnerabilidade <= 0) {
@@ -89,9 +74,7 @@ export function atualizarPlayer(player, larguraTela, alturaPista, velocidadeGlob
     if (player.turboAtivo) {
         player.tempoDuracao--;
         player.velocidade = velocidadeGlobal * MULTIPLICADOR_TURBO;
-        // Efeito visual de empinar ao ativar o turbo
         player.empinada = Math.min(player.empinada + VEL_EMPINADA_TURBO, EMPINADA_TURBO);
- 
         if (player.tempoDuracao <= 0) {
             player.turboAtivo = false;
         }
@@ -99,47 +82,50 @@ export function atualizarPlayer(player, larguraTela, alturaPista, velocidadeGlob
     }
 
     player.velocidade = velocidadeGlobal;
-
-    // Retorno suave da empinada visual quando o turbo acaba
     if(player.empinada > 0){
         player.empinada = Math.max(player.empinada - EMPINADA_RETORNO, 0);
     }
 }
 
-// Ativa o estado de invulnerabilidade do jogador
 export function ativarInvulnerabilidadePosDano(player) {
     player.invulneravelPosDano = true;
     player.tempoInvulnerabilidade = DURACAO_INVULNERABILIDADE;
 }
 
-export function desenharPlayer(ctx, player) {
-    // Efeito clássico de piscar
+export function desenharPlayer(player, els) {
     if (player.invulneravelPosDano && Math.floor(Date.now() / 50) % 2 === 0) {
-        return;
-    }
-
-    const pivotX = player.x + player.largura * 0.25;
-    const pivotY = player.y + player.altura;
-
-    ctx.save();
-    ctx.translate(pivotX, pivotY);
-    ctx.rotate(-player.empinada);
-    ctx.translate(-pivotX, -pivotY)
-
-    if(player.turboAtivo){
-        ctx.fillStyle = '#00e5ff';
-        ctx.shadowBlur  = 12;
+        els.player.style.opacity    = '0';
+        els.playerInd.style.opacity = '0';
     } else {
-        ctx.fillStyle = player.cor;
+        els.player.style.opacity    = '1';
+        els.playerInd.style.opacity = '1';
     }
-    ctx.fillRect(player.x, player.y, player.largura, player.altura);
  
-    // Ponto de referência (roda dianteira)
-    ctx.shadowBlur = 0;
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(player.x + player.largura - 4, player.y + player.altura - 4, 4, 4);
-
-    ctx.restore();
+    const velVibracao = player.turboAtivo ? 8 : 15;
+    const ampVibracao = player.turboAtivo ? 2.0 : 1.0;
+    const vibracaoY   = Math.sin(Date.now() / velVibracao) * ampVibracao;
+ 
+    // Altera propriedades HTML!
+    els.player.style.left      = player.x + 'px';
+    els.player.style.top       = (player.y + vibracaoY) + 'px';
+    els.player.style.transform = `rotate(${-player.empinada}rad)`;
+ 
+    if (player.turboAtivo) {
+        els.player.style.backgroundColor = '#00e5ff';
+        els.player.style.boxShadow       = '0 0 12px #00e5ff';
+    } else {
+        els.player.style.backgroundColor = player.cor;
+        els.player.style.boxShadow       = 'none';
+    }
+ 
+    if (player.turboCarregado) {
+        els.playerInd.style.display = 'block';
+        els.playerInd.style.left    = (player.x + player.largura / 2) + 'px';
+        els.playerInd.style.top     = (player.y - 12 + Math.sin(Date.now() / 150) * 3 + vibracaoY) + 'px';
+        els.playerInd.style.color   = Math.floor(Date.now() / 150) % 2 === 0 ? '#00e5ff' : '#ffffff';
+    } else {
+        els.playerInd.style.display = 'none';
+    }
 }
  
 export function getTurbo(player) {
