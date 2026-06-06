@@ -1,5 +1,5 @@
 import { TIPO_OBSTACULO } from './obstaculos.js';
-import { ativarInvulnerabilidadePosDano } from './player.js';
+import { ativarInvulnerabilidadePosDano, ativarControlesInvertidos } from './player.js';
 
 export const RESULTADO_COLISAO = {
     NENHUM: 'nenhum',
@@ -97,25 +97,12 @@ export function aplicarColisoes(player, resultados, callbacks) {
                 }
                 break;
  
-            case RESULTADO_COLISAO.LAMA:
-                // Reduz velocidade gradualmente
-                player.velocidade = Math.max(
-                    player.velocidade * 0.85,
-                    1
-                );
-
-                // Aplica dano ao jogador e ativa a invulnerabilidade
-                if (!danoAplicado && !player.invulneravelPosDano) {
-                    player.vidas--;
-                    danoAplicado = true;
-                    
-                    // Ativa a proteção temporária
-                    ativarInvulnerabilidadePosDano(player);
-                    
-                    if (callbacks.onDano) callbacks.onDano(player);
+                case RESULTADO_COLISAO.LAMA:
+                // Ativa inversão de controles por 5s; sem dano
+                if (!player.controlesInvertidos) {
+                    ativarControlesInvertidos(player);
+                    if (callbacks.onLama) callbacks.onLama(player);
                 }
-                
-                if (callbacks.onLama) callbacks.onLama(player);
                 break;
  
             case RESULTADO_COLISAO.AGUA:

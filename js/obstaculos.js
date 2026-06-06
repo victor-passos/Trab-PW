@@ -39,7 +39,6 @@ function criarObstaculo(velocidadeGlobal, larguraTela, alturaTela, els) {
     else if (rolagem < 0.50) tipo = TIPO_OBSTACULO.AGUA;
     else if (rolagem < 0.75) tipo = TIPO_OBSTACULO.VEICULO;
  
-    // CORREÇÃO: A constante chama-se CONFIG e não CONFIG_OBS
     const config  = CONFIG[tipo];
     const faixa   = Math.floor(Math.random() * NUM_FAIXAS);
     const limites = getLimitesPista(alturaTela);
@@ -55,7 +54,6 @@ function criarObstaculo(velocidadeGlobal, larguraTela, alturaTela, els) {
         velocidade: velocidadeGlobal + velExtra,
     };
  
-    // CRIAÇÃO DINÂMICA NA ÁRVORE DOM
     const el = document.createElement('div');
     el.className    = `obstaculo obs-${tipo}`;
     el.style.width  = obs.largura + 'px';
@@ -75,9 +73,7 @@ function criarObstaculo(velocidadeGlobal, larguraTela, alturaTela, els) {
     return obs;
 }
  
-// CORREÇÃO: Ordem dos argumentos ajustada para bater certo com a chamada do game.js
 export function atualizarObstaculos(velocidadeGlobal, delta, larguraTela, alturaTela, els) {
-    // CORREÇÃO: As variáveis de temporização usavam nomes inexistentes
     contadorFrames++;
     if (contadorFrames >= frameProxSpawn) {
         obstaculosAtivos.push(criarObstaculo(velocidadeGlobal, larguraTela, alturaTela, els));
@@ -90,12 +86,11 @@ export function atualizarObstaculos(velocidadeGlobal, delta, larguraTela, altura
         obs.x -= obs.velocidade * delta;
         if (obs.x + obs.largura > 0) return true;
         
-        if (obs.element) obs.element.remove(); // REMOÇÃO DINÂMICA DA ÁRVORE DOM
+        if (obs.element) obs.element.remove(); 
         return false;
     });
 }
  
-// Getter para colisão 
 export function getObstaculos() {
     return obstaculosAtivos;
 }
