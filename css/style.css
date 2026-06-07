@@ -12,7 +12,7 @@ body {
     user-select: none;
 }
  
-/* Contentor Principal do Jogo */
+/* Container Principal do Jogo */
 #game-container {
     width: 800px;
     height: 400px;
@@ -62,7 +62,7 @@ body {
     z-index: 10;
 }
  
-/* Elemento Visual do Jogador (Mota) */
+/* Elemento Visual do Jogador */
 #player {
     position: absolute;
     width: 24px; 
@@ -74,7 +74,7 @@ body {
     transition: background-color 0.1s;
 }
  
-/* Roda Dianteira da Mota */
+/* Roda Dianteira da Moto */
 .player-front {
     position: absolute;
     right: 0; 
@@ -84,7 +84,7 @@ body {
     background-color: #fff;
 }
  
-/* Balão de Notificação do Turbo por cima da Mota */
+/* Balão de Notificação do Turbo por cima da Moto */
 #player-indicador {
     position: absolute;
     color: #00e5ff;
@@ -101,11 +101,10 @@ body {
 .obstaculo { 
     position: absolute; 
     box-sizing: border-box; 
-    box-shadow: 2px 2px 0 rgba(0,0,0,0.25); 
     will-change: left;
 }
  
-/* Lama: Inverte controles e Desaceleração */
+/* Lama: Inverte controles */
 .obs-lama { 
     background-color: #6b3d0f; 
     border: 1.5px solid #4a2a08; 
@@ -275,6 +274,25 @@ body {
     background-color: #000; 
     display: flex; 
 }
+
+/* NOVO: Estilo para a tela de contagem */
+#tela-contagem {
+    background-color: rgba(0,0,0,0.4);
+}
+#texto-contagem {
+    font-size: 120px;
+    font-weight: bold;
+    color: #ffeb3b;
+    text-shadow: 4px 4px 0 #000, 0 0 20px rgba(255, 235, 59, 0.6);
+    animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.15); }
+    100% { transform: scale(1); }
+}
+
 #tela-pausa { 
     background-color: rgba(0,0,0,0.65); 
 }

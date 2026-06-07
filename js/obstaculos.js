@@ -72,7 +72,7 @@ function criarObstaculo(velocidadeGlobal, larguraTela, alturaTela, els) {
     obs.element = el;
     return obs;
 }
- 
+
 export function atualizarObstaculos(velocidadeGlobal, delta, larguraTela, alturaTela, els) {
     contadorFrames++;
     if (contadorFrames >= frameProxSpawn) {

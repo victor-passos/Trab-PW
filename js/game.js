@@ -1,5 +1,5 @@
 import { ESTADOS, getEstado, definirEstado } from './estado.js';
-import { iniciarInput, teclaPressionada, teclaPressionadaAgora, TECLAS } from './input.js';
+import { iniciarInput, teclaPressionadaAgora, TECLAS } from './input.js';
 import { criarPlayer, atualizarPlayer, desenharPlayer, getTurbo, iniciarFaixa } from './player.js';
 import { initPistaDOM, atualizarPista, getLimitesPista } from './pista.js';
 import { atualizarObstaculos, resetarObstaculos, getObstaculos } from './obstaculos.js';
@@ -16,107 +16,142 @@ const INCREMENTO_VEL = 0.0005;
 
 // ── Elementos DOM Cache ───────────────────────────────────────────────────
 const els = {
-    marcacoes:  document.getElementById('marcacoes'),
-    faixas:     document.getElementById('faixas'),
-    entidades:  document.getElementById('entidades'),
-    player:     document.getElementById('player'),
-    playerInd:  document.getElementById('player-indicador'),
-    vidas:      document.getElementById('hud-vidas'),
-    pontos:     document.getElementById('hud-pontos'),
-    moedas:     document.getElementById('hud-moedas'),
-    vel:        document.getElementById('hud-vel'),
-    dist:       document.getElementById('hud-dist'),
-    rec:        document.getElementById('hud-rec'),
-    turboFill:  document.getElementById('hud-turbo-fill'),
-    turboText:  document.getElementById('hud-turbo-text'),
-    zInd:       document.getElementById('hud-z-indicator'),
-    zKey:       document.querySelector('.z-key'),
-    telas:      document.querySelectorAll('.tela'),
-    inicio:     document.getElementById('tela-inicio'),
-    pausa:      document.getElementById('tela-pausa'),
-    fim:        document.getElementById('tela-fim'),
-    inicioRec:  document.getElementById('inicio-recorde'),
-    fimRecMsg:  document.getElementById('fim-recorde-msg'),
-    fimStats:   document.getElementById('fim-stats-container'),
+    marcacoes:     document.getElementById('marcacoes'),
+    faixas:        document.getElementById('faixas'),
+    entidades:     document.getElementById('entidades'),
+    player:        document.getElementById('player'),
+    playerInd:     document.getElementById('player-indicador'),
+    vidas:         document.getElementById('hud-vidas'),
+    pontos:        document.getElementById('hud-pontos'),
+    moedas:        document.getElementById('hud-moedas'),
+    vel:           document.getElementById('hud-vel'),
+    dist:          document.getElementById('hud-dist'),
+    rec:           document.getElementById('hud-rec'),
+    turboFill:     document.getElementById('hud-turbo-fill'),
+    turboText:     document.getElementById('hud-turbo-text'),
+    zInd:          document.getElementById('hud-z-indicator'),
+    zKey:          document.querySelector('.z-key'),
+    telas:         document.querySelectorAll('.tela'),
+    inicio:        document.getElementById('tela-inicio'),
+    contagem:      document.getElementById('tela-contagem'), // Adicionado
+    textoContagem: document.getElementById('texto-contagem'), // Adicionado
+    pausa:         document.getElementById('tela-pausa'),
+    fim:           document.getElementById('tela-fim'),
+    inicioRec:     document.getElementById('inicio-recorde'),
+    fimRecMsg:     document.getElementById('fim-recorde-msg'),
+    fimStats:      document.getElementById('fim-stats-container')
 };
- 
+
 // ── Estado global do loop ─────────────────────────────────────────────────
 let velocidadeGlobal = VEL_INICIAL;
 let deslocamento     = 0;
 let ultimoTempo      = 0;
 let player           = null;
 let resumoFinal      = null;
- 
+let tempoContagem    = 0; // Controla o tempo da contagem de início
+
 function iniciar() {
     iniciarInput();
-    initPistaDOM(els);
+    initPistaDOM(els, ALTURA_TELA);
     els.inicioRec.innerText = getRecorde();
     definirEstado(ESTADOS.INICIO, els);
+    
+    // Inicializa uma instância provisória do jogador para os menus não quebrarem
+    player = criarPlayer(LARGURA_TELA, ALTURA_TELA);
+    iniciarFaixa(player, getLimitesPista(ALTURA_TELA));
+    
     requestAnimationFrame(loop);
 }
- 
+
 function novoJogo() {
     player           = criarPlayer(LARGURA_TELA, ALTURA_TELA); 
     iniciarFaixa(player, getLimitesPista(ALTURA_TELA));
     velocidadeGlobal = VEL_INICIAL;
     deslocamento     = 0;
     resumoFinal      = null;
- 
+    tempoContagem    = 3999; // Cerca de 4 segundos (3, 2, 1, VAI!)
+
     resetarObstaculos();
     resetarItens();
     resetarPlacar();
-    definirEstado(ESTADOS.JOGANDO, els);
+    
+    // Muda para o estado de Preparação antes de Jogar!
+    definirEstado(ESTADOS.PREPARANDO, els);
 }
- 
+
 function loop(timestamp) {
+    if (!ultimoTempo) ultimoTempo = timestamp;
     const deltaMs = timestamp - ultimoTempo;
     ultimoTempo   = timestamp;
-    const delta   = Math.min(deltaMs / 16.67, 3); // Limita saltos de tempo
- 
-    processar(delta);
+    const delta   = Math.min(deltaMs / 16.67, 3); // Limita saltos de tempo (lag spike protection)
+
+    processar(delta, deltaMs);
     desenharDOM();
     requestAnimationFrame(loop);
 }
- 
-function processar(delta) {
+
+function processar(delta, deltaMs) {
     const estado = getEstado();
- 
+
     if (estado === ESTADOS.INICIO) {
         if (teclaPressionadaAgora(TECLAS.ENTER) || teclaPressionadaAgora(TECLAS.ESPACO)) {
             novoJogo();
         }
         return;
     }
- 
+
+    // --- LÓGICA DE CONTAGEM REGRESSIVA ---
+    if (estado === ESTADOS.PREPARANDO) {
+        tempoContagem -= deltaMs;
+
+        if (tempoContagem > 3000) {
+            els.textoContagem.innerText = "3";
+        } else if (tempoContagem > 2000) {
+            els.textoContagem.innerText = "2";
+        } else if (tempoContagem > 1000) {
+            els.textoContagem.innerText = "1";
+        } else if (tempoContagem > 0) {
+            els.textoContagem.innerText = "VAI!";
+        } else {
+            // Terminou a contagem, a corrida começa!
+            definirEstado(ESTADOS.JOGANDO, els);
+        }
+        return; // Não atualiza pista nem obstáculos enquanto estiver contando
+    }
+
     if (estado === ESTADOS.JOGANDO) {
-        if (teclaPressionadaAgora(TECLAS.ESC)) { definirEstado(ESTADOS.PAUSA, els); return; }
- 
+        if (teclaPressionadaAgora(TECLAS.ESC)) { 
+            definirEstado(ESTADOS.PAUSA, els); 
+            return; 
+        }
+
         velocidadeGlobal = Math.min(velocidadeGlobal + INCREMENTO_VEL, VEL_MAXIMA);
- 
-        // CORREÇÃO: Argumentos passados na ordem exata esperada pelas funções!
+
+        // Atualização de lógicas de entidades usando os parâmetros corretos
         atualizarPlayer(player, getLimitesPista(ALTURA_TELA), velocidadeGlobal);
         atualizarObstaculos(velocidadeGlobal, delta, LARGURA_TELA, ALTURA_TELA, els);
         atualizarItens(velocidadeGlobal, delta, LARGURA_TELA, ALTURA_TELA, els);
- 
+
+        // Resolução de Colisões
         const resultados = verificarColisoes(player, getObstaculos(), getItens());
         aplicarColisoes(player, resultados, {
             onDano:  () => verificarFimDeJogo(),
             onMoeda: () => registrarMoeda(),
             onAgua:  () => { player.vidas = 0; verificarFimDeJogo(); },
         });
- 
+
         deslocamento += velocidadeGlobal * delta;
         atualizarPontuacao(velocidadeGlobal * delta);
         return;
     }
- 
+
     if (estado === ESTADOS.PAUSA) {
         if (teclaPressionadaAgora(TECLAS.ESC) || teclaPressionadaAgora(TECLAS.ENTER)) {
             definirEstado(ESTADOS.JOGANDO, els);
         }
         return;
     }
- 
+
     if (estado === ESTADOS.FIM) {
         if (teclaPressionadaAgora(TECLAS.ENTER) || teclaPressionadaAgora(TECLAS.ESPACO)) {
             els.inicioRec.innerText = getRecorde(); 
@@ -125,11 +160,12 @@ function processar(delta) {
         return;
     }
 }
- 
+
 function verificarFimDeJogo() {
     if (player.vidas > 0) return;
+    
     resumoFinal = finalizarPlacar();
- 
+
     if (resumoFinal.novoRecorde) {
         els.fimRecMsg.innerText    = `🏆 NOVO RECORDE: ${resumoFinal.pontuacao} pts!`;
         els.fimRecMsg.style.color  = '#ffd700';
@@ -137,7 +173,7 @@ function verificarFimDeJogo() {
         els.fimRecMsg.innerText    = `Pontuação obtida: ${resumoFinal.pontuacao} pts`;
         els.fimRecMsg.style.color  = '#ffffff';
     }
- 
+
     els.fimStats.innerHTML = `
         Distância alcançada: ${resumoFinal.distancia}m<br>
         Moedas recolhidas: ${resumoFinal.moedas}<br>
@@ -145,26 +181,28 @@ function verificarFimDeJogo() {
             ${!resumoFinal.novoRecorde ? `Recorde anterior: ${resumoFinal.recorde} pts` : ''}
         </span>
     `;
- 
+
     definirEstado(ESTADOS.FIM, els);
 }
- 
+
+// Manipulação puramente visual da Árvore HTML/CSS do documento
 function desenharDOM() {
     const estado = getEstado();
-    if (estado !== ESTADOS.JOGANDO && estado !== ESTADOS.PAUSA) return;
- 
-    // Animar marcações da pista
+    // A tela vai renderizar a pista e o player também durante o PREPARANDO
+    if (estado !== ESTADOS.JOGANDO && estado !== ESTADOS.PAUSA && estado !== ESTADOS.PREPARANDO) return;
+
+    // Deslocar as faixas da pista
     atualizarPista(deslocamento, els);
- 
-    // Atualizar dados de HUD
+
+    // Atualizar números de HUD
     els.vidas.innerText  = player.vidas;
     els.pontos.innerText = getPontuacao();
     els.moedas.innerText = getMoedas();
     els.vel.innerText    = velocidadeGlobal.toFixed(1);
     els.dist.innerText   = getDistancia();
     els.rec.innerText    = getRecorde();
- 
-    // Controlar Interface do Turbo
+
+    // Interface Visual do Power-up
     const turbo = getTurbo(player);
     if (turbo.ativo) {
         const tProp = turbo.tempoAtual / turbo.tempoMax;
@@ -186,8 +224,8 @@ function desenharDOM() {
         els.turboText.style.color  = '#ffffff';
         els.zInd.style.display     = 'none';
     }
- 
-    // CORREÇÃO: Deslocar fisicamente os DOM Elements dos obstáculos e itens gerados!
+
+    // Traduzir posições X e Y para propriedades style CSS (movimento dos elementos)
     const obstaculosAtivos = getObstaculos();
     for (const obs of obstaculosAtivos) {
         if (obs.element) obs.element.style.left = obs.x + 'px';
@@ -202,11 +240,9 @@ function desenharDOM() {
         }
     }
 
-    // Desenhar Player
+    // Invoca propriedades visuais do jogador (brilhos, vibrações, etc)
     desenharPlayer(player, els); 
 }
- 
-// ── Arranque ──────────────────────────────────────────────────────────────
-window.onload = function () {
-    iniciar();
-};
+
+// ── Iniciar Aplicação ────────────────────────────────────────────────────────
+iniciar();

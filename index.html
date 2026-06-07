@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-        <div id="game-container">
+    <div id="game-container">
         
         <!-- Elementos do Cenário e Pista -->
         <div id="pista-bg">
@@ -23,7 +23,7 @@
             <div id="player-indicador">[Z]</div>
         </div>
  
-        <!-- Painel de Interface HUD -->
+        <!-- Interface HUD -->
         <div id="hud">
             <div class="hud-topo">
                 <div class="coluna">
@@ -50,7 +50,7 @@
             </div>
         </div>
  
-        <!-- Ecrã de Boas-Vindas / Início -->
+        <!-- Início -->
         <div id="tela-inicio" class="tela">
             <h1>BIKE RUNNER</h1>
             <div class="texto-principal">Prime ENTER ou ESPAÇO para iniciar a corrida</div>
@@ -61,14 +61,19 @@
             </div>
             <div class="recorde-texto">Recorde Atual: <span id="inicio-recorde">0</span> pts</div>
         </div>
+
+        <!-- Contagem -->
+        <div id="tela-contagem" class="tela">
+            <div id="texto-contagem">3</div>
+        </div>
  
-        <!-- Ecrã de Pausa -->
+        <!-- Pausa -->
         <div id="tela-pausa" class="tela">
             <h2>PAUSA</h2>
             <div class="texto-principal">ESC ou ENTER para retomar a corrida</div>
         </div>
  
-        <!-- Ecrã de Fim de Jogo (Resultados) -->
+        <!-- Fim de Jogo (Resultados) -->
         <div id="tela-fim" class="tela">
             <div id="fim-titulo">FIM DE JOGO</div>
             <div id="fim-recorde-msg">Pontuação obtida: 0 pts</div>
