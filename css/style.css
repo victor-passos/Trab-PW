@@ -19,7 +19,6 @@ body {
     position: relative;
     overflow: hidden;
     background-color: #000;
-    box-shadow: 0 0 25px rgba(0, 229, 255, 0.25);
     border: 3px solid #333;
 }
  
@@ -106,7 +105,7 @@ body {
     will-change: left;
 }
  
-/* Lama: Dano suave e Desaceleração */
+/* Lama: Inverte controles e Desaceleração */
 .obs-lama { 
     background-color: #6b3d0f; 
     border: 1.5px solid #4a2a08; 
