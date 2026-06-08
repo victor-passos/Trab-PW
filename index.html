@@ -3,19 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>BIKE RUNNER</title>
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
     <div id="game-container">
         
-        <!-- Elementos do Cenário e Pista -->
         <div id="pista-bg">
             <div id="faixas"></div>
             <div id="marcacoes"></div>
         </div>
  
-        <!-- Árvore do DOM para Entidades Ativas -->
         <div id="entidades">
             <div id="player">
                 <div class="player-front"></div>
@@ -23,7 +21,6 @@
             <div id="player-indicador">[Z]</div>
         </div>
  
-        <!-- Interface HUD -->
         <div id="hud">
             <div class="hud-topo">
                 <div class="coluna">
@@ -50,10 +47,9 @@
             </div>
         </div>
  
-        <!-- Início -->
         <div id="tela-inicio" class="tela">
             <h1>BIKE RUNNER</h1>
-            <div class="texto-principal">Prime ENTER ou ESPAÇO para iniciar a corrida</div>
+            <div class="texto-principal">Clique na tela e aperte ENTER ou ESPAÇO para iniciar</div>
             <div class="controles">
                 ↑ ↓  Mudar de faixa de rodagem<br>
                 Z    Ativar Turbo (quando disponível)<br>
@@ -62,18 +58,15 @@
             <div class="recorde-texto">Recorde Atual: <span id="inicio-recorde">0</span> pts</div>
         </div>
 
-        <!-- Contagem -->
         <div id="tela-contagem" class="tela">
             <div id="texto-contagem">3</div>
         </div>
  
-        <!-- Pausa -->
         <div id="tela-pausa" class="tela">
             <h2>PAUSA</h2>
             <div class="texto-principal">ESC ou ENTER para retomar a corrida</div>
         </div>
  
-        <!-- Fim de Jogo (Resultados) -->
         <div id="tela-fim" class="tela">
             <div id="fim-titulo">FIM DE JOGO</div>
             <div id="fim-recorde-msg">Pontuação obtida: 0 pts</div>
@@ -83,6 +76,20 @@
  
     </div>
  
+    <div id="audio-container" style="display: none;">
+        <audio id="snd-menu" src="assets/audios/musica/menu.mp3" loop></audio>
+        <audio id="snd-gameplay" src="assets/audios/musica/fundomusical.mp3" loop></audio>
+        <audio id="snd-gameover" src="assets/audios/musica/gameover.mp3"></audio>
+        <audio id="snd-contagem" src="assets/audios/musica/contagem.mp3"></audio>
+
+
+        <audio id="snd-start" src="assets/audios/sfx/start_som.wav"></audio>
+        <audio id="snd-moeda" src="assets/audios/sfx/moeda.wav"></audio>
+        <audio id="snd-turbo" src="assets/audios/sfx/turbo.mp3"></audio>
+        <audio id="snd-agua" src="assets/audios/sfx/cai_na_agua.mp3"></audio>
+        <audio id="snd-dano" src="assets/audios/sfx/dano.mp3"></audio>
+    </div>
+
     <script type="module" src="js/game.js"></script>
 </body>
 </html>

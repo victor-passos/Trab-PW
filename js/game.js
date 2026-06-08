@@ -33,8 +33,8 @@ const els = {
     zKey:          document.querySelector('.z-key'),
     telas:         document.querySelectorAll('.tela'),
     inicio:        document.getElementById('tela-inicio'),
-    contagem:      document.getElementById('tela-contagem'), // Adicionado
-    textoContagem: document.getElementById('texto-contagem'), // Adicionado
+    contagem:      document.getElementById('tela-contagem'),
+    textoContagem: document.getElementById('texto-contagem'),
     pausa:         document.getElementById('tela-pausa'),
     fim:           document.getElementById('tela-fim'),
     inicioRec:     document.getElementById('inicio-recorde'),
@@ -42,24 +42,81 @@ const els = {
     fimStats:      document.getElementById('fim-stats-container')
 };
 
+// ── Cache de Áudios ───────────────────────────────────────────────────────
+const som = {
+    menu:         document.getElementById('snd-menu'),
+    gameplay:     document.getElementById('snd-gameplay'),
+    gameover:     document.getElementById('snd-gameover'),
+    start:        document.getElementById('snd-start'),
+    contagem:     document.getElementById('snd-contagem'),
+    moeda:        document.getElementById('snd-moeda'),
+    turbo:        document.getElementById('snd-turbo'),
+    agua:         document.getElementById('snd-agua'),
+    dano:         document.getElementById('snd-dano')
+};
+
+// Helper para tocar SFX resetando o tempo atual (permite sons rápidos sobrepostos)
+function tocarSFX(audioElement) {
+    if (!audioElement) return;
+    audioElement.currentTime = 0;
+    audioElement.play().catch(() => {});
+}
+
+// Helper para gerenciar músicas de fundo de forma limpa
+function tocarMusica(musicaElement) {
+    pararTodasMusicas();
+    if (musicaElement) {
+        musicaElement.currentTime = 0;
+        musicaElement.play().catch(() => {});
+    }
+}
+
+function pararTodasMusicas() {
+    som.menu.pause();
+    som.gameplay.pause();
+    som.gameover.pause();
+    som.contagem.pause(); // Garante que a contagem pare quando outra música for tocada
+}
+
 // ── Estado global do loop ─────────────────────────────────────────────────
 let velocidadeGlobal = VEL_INICIAL;
 let deslocamento     = 0;
 let ultimoTempo      = 0;
 let player           = null;
 let resumoFinal      = null;
-let tempoContagem    = 0; // Controla o tempo da contagem de início
+let tempoContagem    = 0;
 
 function iniciar() {
     iniciarInput();
     initPistaDOM(els, ALTURA_TELA);
     els.inicioRec.innerText = getRecorde();
     definirEstado(ESTADOS.INICIO, els);
+
+    // Ajuste fino dos volumes de áudio (escala de 0.0 a 1.0)
+    som.menu.volume = 0.50;      // Trilha de menu moderada (50%)
+    som.gameplay.volume = 0.40;  // Trilha de gameplay mais baixa (40%) para destacar efeitos
+    som.gameover.volume = 0.60;  // Trilha de gameover equilibrada (60%)
+    som.contagem.volume = 0.75;  // Música de contagem envolvente (75%)
+    som.start.volume = 0.80;     // Som de início destacado (80%)
+    som.moeda.volume = 0.70;     // Brilho do som de moeda (70%)
+    som.turbo.volume = 0.85;     // Efeito sonoro do turbo marcante (85%)
+    som.agua.volume = 0.70;      // Efeito de mergulho bem nítido (90%)
+    som.dano.volume = 0.80;      // Som de dano/colisão limpo e impactante (80%)
     
-    // Inicializa uma instância provisória do jogador para os menus não quebrarem
     player = criarPlayer(LARGURA_TELA, ALTURA_TELA);
     iniciarFaixa(player, getLimitesPista(ALTURA_TELA));
     
+    // Tenta iniciar a música do menu na primeira interação do usuário com a página
+    const iniciarMusicaMenu = () => {
+        if (getEstado() === ESTADOS.INICIO && som.menu.paused) {
+            som.menu.play().catch(() => {});
+        }
+        window.removeEventListener('click', iniciarMusicaMenu);
+        window.removeEventListener('keydown', iniciarMusicaMenu);
+    };
+    window.addEventListener('click', iniciarMusicaMenu);
+    window.addEventListener('keydown', iniciarMusicaMenu);
+
     requestAnimationFrame(loop);
 }
 
@@ -69,13 +126,17 @@ function novoJogo() {
     velocidadeGlobal = VEL_INICIAL;
     deslocamento     = 0;
     resumoFinal      = null;
-    tempoContagem    = 3999; // Cerca de 4 segundos (3, 2, 1, VAI!)
+    tempoContagem    = 3999; 
 
     resetarObstaculos();
     resetarItens();
     resetarPlacar();
     
-    // Muda para o estado de Preparação antes de Jogar!
+    // Para músicas anteriores, emite o bleep de start e engaja a música de contagem
+    pararTodasMusicas();
+    tocarSFX(som.start);
+    tocarMusica(som.contagem);
+    
     definirEstado(ESTADOS.PREPARANDO, els);
 }
 
@@ -83,7 +144,7 @@ function loop(timestamp) {
     if (!ultimoTempo) ultimoTempo = timestamp;
     const deltaMs = timestamp - ultimoTempo;
     ultimoTempo   = timestamp;
-    const delta   = Math.min(deltaMs / 16.67, 3); // Limita saltos de tempo (lag spike protection)
+    const delta   = Math.min(deltaMs / 16.67, 3);
 
     processar(delta, deltaMs);
     desenharDOM();
@@ -100,7 +161,6 @@ function processar(delta, deltaMs) {
         return;
     }
 
-    // --- LÓGICA DE CONTAGEM REGRESSIVA ---
     if (estado === ESTADOS.PREPARANDO) {
         tempoContagem -= deltaMs;
 
@@ -113,31 +173,49 @@ function processar(delta, deltaMs) {
         } else if (tempoContagem > 0) {
             els.textoContagem.innerText = "VAI!";
         } else {
-            // Terminou a contagem, a corrida começa!
+            tocarMusica(som.gameplay);
             definirEstado(ESTADOS.JOGANDO, els);
+            return;
         }
-        return; // Não atualiza pista nem obstáculos enquanto estiver contando
+        return;
     }
 
     if (estado === ESTADOS.JOGANDO) {
         if (teclaPressionadaAgora(TECLAS.ESC)) { 
+            som.gameplay.pause(); // Pausa a música de fundo temporariamente
             definirEstado(ESTADOS.PAUSA, els); 
             return; 
         }
 
+        // Toca o som do turbo se o botão for pressionado e o turbo estiver carregado
+        if (teclaPressionadaAgora(TECLAS.TURBO) && player.turboCarregado && !player.turboAtivo) {
+            tocarSFX(som.turbo);
+        }
+
         velocidadeGlobal = Math.min(velocidadeGlobal + INCREMENTO_VEL, VEL_MAXIMA);
 
-        // Atualização de lógicas de entidades usando os parâmetros corretos
         atualizarPlayer(player, getLimitesPista(ALTURA_TELA), velocidadeGlobal);
         atualizarObstaculos(velocidadeGlobal, delta, LARGURA_TELA, ALTURA_TELA, els);
         atualizarItens(velocidadeGlobal, delta, LARGURA_TELA, ALTURA_TELA, els);
 
-        // Resolução de Colisões
         const resultados = verificarColisoes(player, getObstaculos(), getItens());
         aplicarColisoes(player, resultados, {
-            onDano:  () => verificarFimDeJogo(),
-            onMoeda: () => registrarMoeda(),
-            onAgua:  () => { player.vidas = 0; verificarFimDeJogo(); },
+            onDano:  () => {
+                tocarSFX(som.dano); // Executa o SFX de colisão/dano
+                verificarFimDeJogo();
+            },
+            onMoeda: () => {
+                registrarMoeda();
+                tocarSFX(som.moeda); // SFX de coletar moeda
+            },
+            onTurbo: () => {
+                tocarSFX(som.turbo); // SFX ao coletar o item turbo da pista
+            },
+            onAgua:  () => { 
+                player.vidas = 0; 
+                tocarSFX(som.agua); // SFX específico de queda na água
+                verificarFimDeJogo(); 
+            },
         });
 
         deslocamento += velocidadeGlobal * delta;
@@ -147,6 +225,7 @@ function processar(delta, deltaMs) {
 
     if (estado === ESTADOS.PAUSA) {
         if (teclaPressionadaAgora(TECLAS.ESC) || teclaPressionadaAgora(TECLAS.ENTER)) {
+            som.gameplay.play().catch(() => {}); // Retoma a música da corrida
             definirEstado(ESTADOS.JOGANDO, els);
         }
         return;
@@ -155,6 +234,7 @@ function processar(delta, deltaMs) {
     if (estado === ESTADOS.FIM) {
         if (teclaPressionadaAgora(TECLAS.ENTER) || teclaPressionadaAgora(TECLAS.ESPACO)) {
             els.inicioRec.innerText = getRecorde(); 
+            tocarMusica(som.menu); // Retoma a música do menu inicial
             definirEstado(ESTADOS.INICIO, els);
         }
         return;
@@ -164,6 +244,8 @@ function processar(delta, deltaMs) {
 function verificarFimDeJogo() {
     if (player.vidas > 0) return;
     
+    // Toca a trilha de gameover quando as vidas acabam
+    tocarMusica(som.gameover);
     resumoFinal = finalizarPlacar();
 
     if (resumoFinal.novoRecorde) {
@@ -185,16 +267,12 @@ function verificarFimDeJogo() {
     definirEstado(ESTADOS.FIM, els);
 }
 
-// Manipulação puramente visual da Árvore HTML/CSS do documento
 function desenharDOM() {
     const estado = getEstado();
-    // A tela vai renderizar a pista e o player também durante o PREPARANDO
     if (estado !== ESTADOS.JOGANDO && estado !== ESTADOS.PAUSA && estado !== ESTADOS.PREPARANDO) return;
 
-    // Deslocar as faixas da pista
     atualizarPista(deslocamento, els);
 
-    // Atualizar números de HUD
     els.vidas.innerText  = player.vidas;
     els.pontos.innerText = getPontuacao();
     els.moedas.innerText = getMoedas();
@@ -202,7 +280,6 @@ function desenharDOM() {
     els.dist.innerText   = getDistancia();
     els.rec.innerText    = getRecorde();
 
-    // Interface Visual do Power-up
     const turbo = getTurbo(player);
     if (turbo.ativo) {
         const tProp = turbo.tempoAtual / turbo.tempoMax;
@@ -240,9 +317,7 @@ function desenharDOM() {
         }
     }
 
-    // Invoca propriedades visuais do jogador (brilhos, vibrações, etc)
     desenharPlayer(player, els); 
 }
 
-// ── Iniciar Aplicação ────────────────────────────────────────────────────────
 iniciar();

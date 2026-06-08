@@ -4,7 +4,7 @@ import { NUM_FAIXAS, getPosFaixa } from './pista.js';
 const TAMX = 24;
 const TAMY = 16;
 const VEL_LATERAL = 0.2;
-const DURACAO_TURBO = 180;
+const DURACAO_TURBO = 300;
 const MULTIPLICADOR_TURBO = 1.8;
 const EMPINADA_TURBO = 0.4;
 const VEL_EMPINADA_TURBO = 0.04;
