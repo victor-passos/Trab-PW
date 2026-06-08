@@ -29,7 +29,7 @@ Não é necessário instalar bibliotecas adicionais com `npm install`.
 No terminal, dentro da pasta raiz do projeto, execute:
 
 ```bash
-node js/node/index.js
+node game/js/node/index.js
 ```
 
 > **Nota:** O arquivo `js/node/index.js` está configurado para servir os arquivos estáticos do diretório atual. Após executar o comando, acesse o endereço indicado no terminal, normalmente:
