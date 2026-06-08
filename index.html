@@ -9,11 +9,13 @@
 <body>
     <div id="game-container">
         
+        <!-- Elementos do Cenário e Pista -->
         <div id="pista-bg">
             <div id="faixas"></div>
             <div id="marcacoes"></div>
         </div>
  
+        <!-- Árvore do DOM para Entidades Ativas -->
         <div id="entidades">
             <!-- A div interna da roda sumiu; o player agora é 100% sprite -->
             <div id="player"></div>
@@ -113,9 +115,8 @@
         <audio id="snd-menu" src="assets/audios/musica/menu.mp3" loop></audio>
         <audio id="snd-gameplay" src="assets/audios/musica/fundomusical.mp3" loop></audio>
         <audio id="snd-gameover" src="assets/audios/musica/gameover.mp3"></audio>
-        <audio id="snd-contagem" src="assets/audios/sfx/contagem.mp3"></audio>
+        <audio id="snd-contagem" src="assets/audios/musica/contagem.mp3"></audio>
         
-        <!-- Efeitos Sonoros (SFX) -->
         <audio id="snd-start" src="assets/audios/sfx/start_som.wav"></audio>
         <audio id="snd-moeda" src="assets/audios/sfx/moeda.wav"></audio>
         <audio id="snd-turbo" src="assets/audios/sfx/turbo.mp3"></audio>
@@ -123,20 +124,6 @@
         <audio id="snd-dano" src="assets/audios/sfx/dano.mp3"></audio>
     </div>
  
-    <div id="audio-container" style="display: none;">
-        <audio id="snd-menu" src="assets/audios/musica/menu.mp3" loop></audio>
-        <audio id="snd-gameplay" src="assets/audios/musica/fundomusical.mp3" loop></audio>
-        <audio id="snd-gameover" src="assets/audios/musica/gameover.mp3"></audio>
-        <audio id="snd-contagem" src="assets/audios/musica/contagem.mp3"></audio>
-
-
-        <audio id="snd-start" src="assets/audios/sfx/start_som.wav"></audio>
-        <audio id="snd-moeda" src="assets/audios/sfx/moeda.wav"></audio>
-        <audio id="snd-turbo" src="assets/audios/sfx/turbo.mp3"></audio>
-        <audio id="snd-agua" src="assets/audios/sfx/cai_na_agua.mp3"></audio>
-        <audio id="snd-dano" src="assets/audios/sfx/dano.mp3"></audio>
-    </div>
-
     <script type="module" src="js/game.js"></script>
 </body>
 </html>

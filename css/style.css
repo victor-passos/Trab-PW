@@ -346,7 +346,6 @@ h2 { color: #e8c840; font-size: 32px; margin-bottom: 30px; margin-top: 0; }
     height: 90px;
     object-fit: contain;
     margin-bottom: 10px;
-    filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.6));
 }
  
 .card-nome {
