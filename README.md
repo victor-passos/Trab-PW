@@ -104,11 +104,11 @@ O jogo também pode ser executado utilizando a extensão **Live Server** no **Vi
         - Movimentação base do jogo
         - Animações
         - Obstaculos
-        - Musica e Efeitos Sonoros
+    - Musica e Efeitos Sonoros
     - Gestão da Main do github
     - Correção de Bugs
 
-- **Lillian Alves**:
+- **Lilian Alves**:
     - Implementação inicial dos elementos:
         - Colisão
         - Itens Coletaveis
