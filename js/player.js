@@ -1,10 +1,11 @@
 import { teclaPressionada, TECLAS } from './input.js';
 import { NUM_FAIXAS, getPosFaixa } from './pista.js';
 
-const TAMX = 24;
-const TAMY = 16;
+// Tamanhos muito maiores para comportar bem os Sprites
+const TAMX = 56;
+const TAMY = 36; 
 const VEL_LATERAL = 0.2;
-const DURACAO_TURBO = 180;
+const DURACAO_TURBO = 300;
 const MULTIPLICADOR_TURBO = 1.8;
 const EMPINADA_TURBO = 0.4;
 const VEL_EMPINADA_TURBO = 0.04;
@@ -12,14 +13,13 @@ const EMPINADA_RETORNO = 0.05;
 const DURACAO_INVULNERABILIDADE = 90;
 const DURACAO_CONTROLES_INVERTIDOS = 300;
 
-export function criarPlayer(larguraTela, alturaTela){
+export function criarPlayer(larguraTela, alturaTela, spriteNormal, spriteLama){
     return {
         x: 100, 
         y: 0, 
         largura: TAMX, 
         altura: TAMY, 
         velocidade: 0, 
-        cor: '#00ff00',
         vidas: 3, 
         pontuacao: 0, 
         faixaAtual: 3, 
@@ -34,6 +34,8 @@ export function criarPlayer(larguraTela, alturaTela){
         tempoInvulnerabilidade: 0,
         controlesInvertidos: false, 
         tempoControlesInvertidos: 0,
+        spriteNormal: spriteNormal || 'assets/imagens/moto1.png',
+        spriteLama:   spriteLama   || 'assets/imagens/moto1lama.png',
     };
 }
 
@@ -61,16 +63,14 @@ export function atualizarPlayer(player, alturaPista, velocidadeGlobal){
         if (player.tempoControlesInvertidos <= 0) player.controlesInvertidos = false;
     }
 
-
     if(!teclaPressionada(TECLAS.BAIXO) && !teclaPressionada(TECLAS.CIMA)){
         player.teclaFaixaAtiva = false;
     }
 
     if(!player.teclaFaixaAtiva){
-        //Inverte cima e baixo se o efeito da lama está ativo
+        // Inverte cima e baixo se o efeito da lama está ativo
         const teclaCima  = player.controlesInvertidos ? TECLAS.BAIXO : TECLAS.CIMA; 
         const teclaBaixo = player.controlesInvertidos ? TECLAS.CIMA  : TECLAS.BAIXO;
-
 
         if(teclaPressionada(teclaCima) && player.faixaAtual > 0){
             player.faixaAtual--;
@@ -116,13 +116,13 @@ export function ativarControlesInvertidos(player) {
     player.tempoControlesInvertidos   = DURACAO_CONTROLES_INVERTIDOS;
 }
 
-
 export function ativarInvulnerabilidadePosDano(player) {
     player.invulneravelPosDano = true;
     player.tempoInvulnerabilidade = DURACAO_INVULNERABILIDADE;
 }
 
 export function desenharPlayer(player, els) {
+    // Efeito Visual de Invulnerabilidade (Piscar)
     if (player.invulneravelPosDano && Math.floor(Date.now() / 50) % 2 === 0) {
         els.player.style.opacity = '0';
         els.playerInd.style.opacity = '0';
@@ -131,26 +131,33 @@ export function desenharPlayer(player, els) {
         els.playerInd.style.opacity = '1';
     }
  
+    // Vibração Motora
     const velVibracao = player.turboAtivo ? 8 : 15;
     const ampVibracao = player.turboAtivo ? 2.0 : 1.0;
     const vibracaoY   = Math.sin(Date.now() / velVibracao) * ampVibracao;
  
+    // Atualiza Propriedades Físicas 
+    els.player.style.width     = player.largura + 'px';
+    els.player.style.height    = player.altura + 'px';
     els.player.style.left      = player.x + 'px';
     els.player.style.top       = (player.y + vibracaoY) + 'px';
     els.player.style.transform = `rotate(${-player.empinada}rad)`;
  
-    if (player.turboAtivo) {
-        els.player.style.backgroundColor = '#00e5ff';
-        els.player.style.boxShadow = '0 0 12px #00e5ff';
-    }else if(player.controlesInvertidos){
-        els.player.style.backgroundColor = '#6b3d0f';
-        els.player.style.boxShadow  = 'none';
-
+    // Aplicação Dinâmica de Assets (Mudança entre moto limpa e com lama)
+    if (player.controlesInvertidos) {
+        els.player.style.backgroundImage = `url('${player.spriteLama}')`;
     } else {
-        els.player.style.backgroundColor = player.cor;
-        els.player.style.boxShadow       = 'none';
+        els.player.style.backgroundImage = `url('${player.spriteNormal}')`;
+    }
+
+    // Efeito de Turbo: Aplica um brilho azulado sobre a imagem da moto
+    if (player.turboAtivo) {
+        els.player.style.filter = 'drop-shadow(0 0 10px #00e5ff) brightness(1.3)';
+    } else {
+        els.player.style.filter = 'drop-shadow(2px 2px 2px rgba(0,0,0,0.5))'; // Sombra normal
     }
  
+    // Indicador [Z]
     if (player.turboCarregado) {
         els.playerInd.style.display = 'block';
         els.playerInd.style.left = (player.x + player.largura / 2) + 'px';

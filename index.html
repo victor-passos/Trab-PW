@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>BIKE RUNNER</title>
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-        <div id="game-container">
+    <div id="game-container">
         
         <!-- Elementos do Cenário e Pista -->
         <div id="pista-bg">
@@ -17,17 +17,23 @@
  
         <!-- Árvore do DOM para Entidades Ativas -->
         <div id="entidades">
-            <div id="player">
-                <div class="player-front"></div>
-            </div>
+            <!-- A div interna da roda sumiu; o player agora é 100% sprite -->
+            <div id="player"></div>
             <div id="player-indicador">[Z]</div>
         </div>
  
-        <!-- Painel de Interface HUD -->
+        <!-- Interface HUD -->
         <div id="hud">
             <div class="hud-topo">
                 <div class="coluna">
-                    <div>Vidas: <span id="hud-vidas">3</span></div>
+                    <!-- Sistema de vidas atualizado para usar os sprites de coração -->
+                    <div>Vidas: 
+                        <span id="hud-vidas" style="display: inline-flex; gap: 4px; align-items: center; vertical-align: middle; margin-left: 5px;">
+                            <img src="assets/imagens/coracaocheio.png" id="vida-1" width="16" height="16">
+                            <img src="assets/imagens/coracaocheio.png" id="vida-2" width="16" height="16">
+                            <img src="assets/imagens/coracaocheio.png" id="vida-3" width="16" height="16">
+                        </span>
+                    </div>
                     <div>Pontos: <span id="hud-pontos">0</span></div>
                     <div>Moedas: <span id="hud-moedas">0</span></div>
                 </div>
@@ -50,10 +56,10 @@
             </div>
         </div>
  
-        <!-- Ecrã de Boas-Vindas / Início -->
+        <!-- Início -->
         <div id="tela-inicio" class="tela">
-            <h1>EXCITEBIKE JS</h1>
-            <div class="texto-principal">Prime ENTER ou ESPAÇO para iniciar a corrida</div>
+            <h1>BIKE RUNNER</h1>
+            <div class="texto-principal">Clique na tela e aperte ENTER ou ESPAÇO para iniciar</div>
             <div class="controles">
                 ↑ ↓  Mudar de faixa de rodagem<br>
                 Z    Ativar Turbo (quando disponível)<br>
@@ -61,14 +67,40 @@
             </div>
             <div class="recorde-texto">Recorde Atual: <span id="inicio-recorde">0</span> pts</div>
         </div>
+
+        <!-- Contagem -->
+        <div id="tela-contagem" class="tela">
+            <div id="texto-contagem">3</div>
+        </div>
+
+        <!-- Seleção de Personagem -->
+        <div id="tela-selecao" class="tela">
+            <h2 class="selecao-titulo">ESCOLHA SUA MOTO</h2>
+            <div class="selecao-cards">
+
+                <div class="card-personagem selecionado" id="card-moto1" data-moto="1">
+                    <img src="assets/imagens/moto1.png" alt="Moto 1" class="card-img">
+                    <div class="card-nome">MOTO ESPORTIVA</div>
+                    <div class="card-desc">Veloz e ágil</div>
+                </div>
+
+                <div class="card-personagem" id="card-moto2" data-moto="2">
+                    <img src="assets/imagens/moto2.png" alt="Moto 2" class="card-img">
+                    <div class="card-nome">MOTO CROSS</div>
+                    <div class="card-desc">Resistente e potente</div>
+                </div>
+
+            </div>
+            <div class="selecao-instrucao">← → para escolher &nbsp;|&nbsp; ENTER ou ESPAÇO para confirmar</div>
+        </div>
  
-        <!-- Ecrã de Pausa -->
+        <!-- Pausa -->
         <div id="tela-pausa" class="tela">
             <h2>PAUSA</h2>
             <div class="texto-principal">ESC ou ENTER para retomar a corrida</div>
         </div>
  
-        <!-- Ecrã de Fim de Jogo (Resultados) -->
+        <!-- Fim de Jogo (Resultados) -->
         <div id="tela-fim" class="tela">
             <div id="fim-titulo">FIM DE JOGO</div>
             <div id="fim-recorde-msg">Pontuação obtida: 0 pts</div>
@@ -76,6 +108,21 @@
             <div class="controles">ENTER ou ESPAÇO para voltar ao menu inicial</div>
         </div>
  
+    </div>
+
+    <div id="audio-container" style="display: none;">
+        <!-- Músicas -->
+        <audio id="snd-menu" src="assets/audios/musica/menu.mp3" loop></audio>
+        <audio id="snd-gameplay" src="assets/audios/musica/fundomusical.mp3" loop></audio>
+        <audio id="snd-gameover" src="assets/audios/musica/gameover.mp3"></audio>
+        <audio id="snd-contagem" src="assets/audios/sfx/contagem.mp3"></audio>
+        
+        <!-- Efeitos Sonoros (SFX) -->
+        <audio id="snd-start" src="assets/audios/sfx/start_som.wav"></audio>
+        <audio id="snd-moeda" src="assets/audios/sfx/moeda.wav"></audio>
+        <audio id="snd-turbo" src="assets/audios/sfx/turbo.mp3"></audio>
+        <audio id="snd-agua" src="assets/audios/sfx/cai_na_agua.mp3"></audio>
+        <audio id="snd-dano" src="assets/audios/sfx/dano.mp3"></audio>
     </div>
  
     <script type="module" src="js/game.js"></script>

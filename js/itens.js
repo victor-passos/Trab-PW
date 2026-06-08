@@ -33,7 +33,6 @@ function criarItem(velocidadeGlobal, larguraTela, alturaTela, els) {
     const obstaculos = getObstaculos();
     const faixasPossiveis = [];
  
-    // Impede spawns sobrepostos em faixas com obstáculos adjacentes
     for (let i = 0; i < NUM_FAIXAS; i++) {
         let livre = true;
         for (const obs of obstaculos) {
@@ -57,7 +56,6 @@ function criarItem(velocidadeGlobal, larguraTela, alturaTela, els) {
         coletado:  false,
     };
  
-    // CRIAÇÃO DINÂMICA NA ÁRVORE DOM
     const el = document.createElement('div');
     el.className    = `item ${config.cssClass}`;
     el.style.width  = item.largura + 'px';
@@ -71,7 +69,6 @@ function criarItem(velocidadeGlobal, larguraTela, alturaTela, els) {
 }
  
 export function atualizarItens(velocidadeGlobal, delta, larguraTela, alturaTela, els) {
-    // CORREÇÃO: As variáveis de temporização usavam nomes inexistentes
     contadorFrames++;
     if (contadorFrames >= frameProxSpawn) {
         const nItem = criarItem(velocidadeGlobal, larguraTela, alturaTela, els);
@@ -85,7 +82,7 @@ export function atualizarItens(velocidadeGlobal, delta, larguraTela, alturaTela,
  
     itensAtivos = itensAtivos.filter(item => {
         if (item.coletado) {
-            if (item.element) item.element.remove(); // REMOÇÃO IMEDIATA AO COLETAR
+            if (item.element) item.element.remove(); 
             return false;
         }
         item.x        -= item.velocidade * delta;
@@ -93,8 +90,7 @@ export function atualizarItens(velocidadeGlobal, delta, larguraTela, alturaTela,
  
         if (item.x + item.largura > 0) return true;
         
-        if (item.element) item.element.remove(); // REMOÇÃO FORA DA TELA
-        return false;
+        if (item.element) item.element.remove(); 
     });
 }
 

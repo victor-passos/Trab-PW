@@ -10,7 +10,7 @@ export const RESULTADO_COLISAO = {
     COLETOU_TURBO:'coletou_turbo',
 };
 
-const HITBOX = 4;
+const HITBOX = 8;
 
 function getHitbox(entidade) {
     return {
@@ -33,18 +33,15 @@ function colidindo(a, b) {
     );
 }
 
-// Verifica colisões do player com obstáculos
 export function verificarColisoes(player, obstaculos, itens) {
     const resultados = [];
  
-    // Player invulnerável se o turbo estiver ativo OU se estiver no período de segurança pós-dano
     const invulneravel = player.turboAtivo || player.invulneravelPosDano;
  
-    // Obstáculos 
     for (const obs of obstaculos) {
         if (!colidindo(player, obs)) continue;
  
-        if (invulneravel) continue; // Turbo e invulnerabilidade ignoram todos os obstáculos de dano/lentidão
+        if (invulneravel) continue; 
  
         switch (obs.tipo) {
             case TIPO_OBSTACULO.LAMA:
@@ -60,7 +57,6 @@ export function verificarColisoes(player, obstaculos, itens) {
         }
     }
     
-    // Itens (Moedas e Turbos são recolhidos normalmente, mesmo estando invulnerável)
     for (const item of itens) {
         if (item.coletado) continue;
         if (!colidindo(player, item)) continue;
@@ -77,9 +73,7 @@ export function verificarColisoes(player, obstaculos, itens) {
     return resultados;
 }
 
-// Aplica os resultados no player
 export function aplicarColisoes(player, resultados, callbacks) {
-    // Evita aplicar dano múltiplo no mesmo frame
     let danoAplicado = false;
  
     for (const resultado of resultados) {
@@ -90,15 +84,12 @@ export function aplicarColisoes(player, resultados, callbacks) {
                     player.vidas--;
                     danoAplicado = true;
                     
-                    // Ativa a proteção temporária imediatamente após a perda de vida
                     ativarInvulnerabilidadePosDano(player);
-                    
                     if (callbacks.onDano) callbacks.onDano(player);
                 }
                 break;
  
                 case RESULTADO_COLISAO.LAMA:
-                // Ativa inversão de controles por 5s; sem dano
                 if (!player.controlesInvertidos) {
                     ativarControlesInvertidos(player);
                     if (callbacks.onLama) callbacks.onLama(player);
@@ -106,7 +97,6 @@ export function aplicarColisoes(player, resultados, callbacks) {
                 break;
  
             case RESULTADO_COLISAO.AGUA:
-                // Para completamente na faixa bloqueada
                 player.velocidade = 0;
                 if (callbacks.onAgua) callbacks.onAgua(player);
                 break;

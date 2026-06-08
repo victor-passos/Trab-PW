@@ -7,22 +7,21 @@ export const TIPO_OBSTACULO = {
     BALA: 'bala',
 };
 
+// Tamanho do Veículo atualizado para comportar a imagem 'obstaculocarro.png'
 const CONFIG = {
     lama: {largura: 80, altura: 12, velocidade: 0},
     agua: {largura: 120, altura: 60, velocidade: 0},
-    veiculo: {largura: 28, altura: 16, velocidade: 4},
-    bala: {largura: 12, altura: 6, velocidade: 7},
+    veiculo: {largura: 64, altura: 32, velocidade: 4}, // Tamanho da imagem do carro
+    bala: {largura: 16, altura: 8, velocidade: 7},
 };
 
-const INTERVALO_SPAWN_MIN = 60;   // frames mínimos entre spawns
-const INTERVALO_SPAWN_MAX = 120;  // frames máximos entre spawns
+const INTERVALO_SPAWN_MIN = 60;   
+const INTERVALO_SPAWN_MAX = 120;  
 
-// Estado
 let obstaculosAtivos = [];
 let frameProxSpawn   = INTERVALO_SPAWN_MIN;
 let contadorFrames   = 0;
 
-// Reset
 export function resetarObstaculos() {
     obstaculosAtivos.forEach(obs => {
         if (obs.element) obs.element.remove();
@@ -64,9 +63,8 @@ function criarObstaculo(velocidadeGlobal, larguraTela, alturaTela, els) {
         el.innerHTML = '<div class="dot" style="left:12px"></div>'
                      + '<div class="dot" style="left:36px"></div>'
                      + '<div class="dot" style="left:60px"></div>';
-    } else if (tipo === TIPO_OBSTACULO.VEICULO) {
-        el.innerHTML = `<div class="window" style="width:${obs.largura - 8}px; height:${obs.altura - 8}px"></div>`;
     }
+    // Veículo não precisa mais de manipulação de string HTML por dentro, o CSS faz o trabalho com a imagem!
  
     els.entidades.appendChild(el);
     obs.element = el;

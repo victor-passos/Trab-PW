@@ -1,8 +1,10 @@
 export const ESTADOS ={
-    INICIO:'inicio',
-    JOGANDO:'jogando',
-    PAUSA:'pausa',
-    FIM:'fim',
+    INICIO: 'inicio',
+    SELECAO: 'selecao',
+    PREPARANDO: 'preparando', 
+    JOGANDO: 'jogando',
+    PAUSA: 'pausa',
+    FIM: 'fim',
 };
 
 let estadoAtual = ESTADOS.INICIO;
@@ -15,8 +17,10 @@ export function definirEstado(novoEstado, els) {
     estadoAtual = novoEstado;
     if (els) {
         els.telas.forEach(t => t.style.display = 'none');
-        if (novoEstado === ESTADOS.INICIO)  els.inicio.style.display = 'flex';
-        if (novoEstado === ESTADOS.PAUSA)   els.pausa.style.display  = 'flex';
-        if (novoEstado === ESTADOS.FIM)     els.fim.style.display    = 'flex';
+        if (novoEstado === ESTADOS.INICIO)     els.inicio.style.display   = 'flex';
+        if (novoEstado === ESTADOS.SELECAO)    els.selecao.style.display  = 'flex';
+        if (novoEstado === ESTADOS.PREPARANDO) els.contagem.style.display = 'flex';
+        if (novoEstado === ESTADOS.PAUSA)      els.pausa.style.display    = 'flex';
+        if (novoEstado === ESTADOS.FIM)        els.fim.style.display      = 'flex';
     }
 }

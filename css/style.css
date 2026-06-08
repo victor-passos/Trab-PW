@@ -12,27 +12,26 @@ body {
     user-select: none;
 }
  
-/* Contentor Principal do Jogo */
+/* Container Principal do Jogo */
 #game-container {
     width: 800px;
     height: 400px;
     position: relative;
     overflow: hidden;
-    background-color: #000;
-    box-shadow: 0 0 25px rgba(0, 229, 255, 0.25);
-    border: 3px solid #333;
+    background-color: #225d05;
+    border: 1px solid #000000a3;
 }
  
 /* Pista de Corrida */
 #pista-bg {
     position: absolute;
-    top: 80px;      /* 20% da altura do ecrã */
+    top: 80px;      /* 20% da altura da tela */
     left: 0;
     width: 100%;
-    height: 240px;  /* 60% da altura do ecrã */
+    height: 240px;  /* 60% da altura da tela */
     background-color: #b07242; /* Cor clássica de terra batida */
-    border-top: 4px solid #3cb400;
-    border-bottom: 4px solid #3cb400;
+    border-top: 4px solid #225d05;
+    border-bottom: 4px solid #225d05;
     box-sizing: border-box;
 }
  
@@ -53,7 +52,7 @@ body {
     will-change: background-position-x;
 }
  
-/* Contentor Geral de Entidades Ativas */
+/* Container Geral de Entidades Ativas */
 #entidades {
     position: absolute; 
     top: 0; 
@@ -63,29 +62,22 @@ body {
     z-index: 10;
 }
  
-/* Elemento Visual do Jogador (Mota) */
+/* Elemento Visual do Jogador Atualizado para Sprite (Imagem) */
 #player {
     position: absolute;
-    width: 24px; 
-    height: 16px;
-    background-color: #00ff00;
-    transform-origin: 25% 100%;
-    will-change: transform, left, top, opacity;
+    background-image: url('../assets/imagens/moto1.png');
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center bottom;
+    background-color: transparent !important;
+    border: none;
+    transform-origin: 20% 90%;
+    will-change: transform, left, top, opacity, filter;
     z-index: 15;
-    transition: background-color 0.1s;
+    transition: filter 0.15s ease-out;
 }
  
-/* Roda Dianteira da Mota */
-.player-front {
-    position: absolute;
-    right: 0; 
-    bottom: 0;
-    width: 4px; 
-    height: 4px;
-    background-color: #fff;
-}
- 
-/* Balão de Notificação do Turbo por cima da Mota */
+/* Balão de Notificação do Turbo por cima da Moto */
 #player-indicador {
     position: absolute;
     color: #00e5ff;
@@ -102,15 +94,15 @@ body {
 .obstaculo { 
     position: absolute; 
     box-sizing: border-box; 
-    box-shadow: 2px 2px 0 rgba(0,0,0,0.25); 
     will-change: left;
 }
  
-/* Lama: Dano suave e Desaceleração */
+/* Lama: Inverte controles */
 .obs-lama { 
     background-color: #6b3d0f; 
     border: 1.5px solid #4a2a08; 
     border-radius: 4px;
+    box-shadow: 2px 2px 0 rgba(0,0,0,0.25); 
 }
 .obs-lama .dot { 
     position: absolute; 
@@ -134,17 +126,14 @@ body {
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='15'%3E%3Cpath d='M0,8 L8,4 L16,8' stroke='rgba%28255,255,255,0.35%29' stroke-width='1.5' fill='none'/%3E%3C/svg%3E"); 
 }
  
-/* Veículos Adversários */
+/* Veículos Adversários (Agora em Sprite!) */
 .obs-veiculo { 
-    background-color: #e03030; 
-    border: 1.5px solid #991010; 
-    border-radius: 2px;
-}
-.obs-veiculo .window { 
-    position: absolute; 
-    left: 4px; 
-    top: 3px; 
-    background-color: #88ccff; 
+    background-image: url('../assets/imagens/obstaculocarro.png');
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center bottom;
+    background-color: transparent !important;
+    border: none !important;
 }
  
 /* Projéteis Rápidos (Balas) */
@@ -152,6 +141,7 @@ body {
     background-color: #ffee00; 
     border: 1.5px solid #cc9900; 
     clip-path: polygon(30% 0, 100% 0, 100% 100%, 30% 100%, 0 50%); 
+    box-shadow: 0 0 4px rgb(253, 181, 1); 
 }
  
 /* Classes Gerais de Itens Colecionáveis */
@@ -261,7 +251,7 @@ body {
     box-shadow: 1px 1px 0 rgba(255,255,255,0.25);
 }
  
-/* Ecrãs e Menus do Jogo */
+/* Telas e Menus do Jogo */
 .tela { 
     position: absolute; 
     top: 0; left: 0; width: 100%; height: 100%; 
@@ -276,6 +266,25 @@ body {
     background-color: #000; 
     display: flex; 
 }
+
+/* Estilo para a tela de contagem */
+#tela-contagem {
+    background-color: rgba(0,0,0,0.4);
+}
+#texto-contagem {
+    font-size: 120px;
+    font-weight: bold;
+    color: #ffeb3b;
+    text-shadow: 4px 4px 0 #000, 0 0 20px rgba(255, 235, 59, 0.6);
+    animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.15); }
+    100% { transform: scale(1); }
+}
+
 #tela-pausa { 
     background-color: rgba(0,0,0,0.65); 
 }
@@ -292,3 +301,69 @@ h2 { color: #e8c840; font-size: 32px; margin-bottom: 30px; margin-top: 0; }
 #fim-titulo { color: #ff4444; font-size: 36px; font-weight: bold; margin-bottom: 40px; margin-top: 0; }
 #fim-recorde-msg { font-size: 18px; font-weight: bold; margin-bottom: 25px; }
 .fim-stats { font-size: 14px; line-height: 1.6; margin-bottom: 30px; }
+
+
+#tela-selecao {
+    background-color: rgba(0, 0, 0, 0.92);
+    gap: 0;
+}
+ 
+.selecao-titulo {
+    color: #00e5ff;
+    font-size: 26px;
+    margin: 0 0 24px 0;
+    letter-spacing: 3px;
+    text-shadow: 0 0 12px #00e5ff88;
+}
+ 
+.selecao-cards {
+    display: flex;
+    gap: 32px;
+    justify-content: center;
+    margin-bottom: 24px;
+}
+ 
+.card-personagem {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 180px;
+    padding: 14px 10px 12px;
+    border: 2px solid #444;
+    background: rgba(255,255,255,0.04);
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+}
+ 
+.card-personagem.selecionado {
+    border-color: #00e5ff;
+    background: rgba(0, 229, 255, 0.10);
+    box-shadow: 0 0 18px rgba(0, 229, 255, 0.35);
+}
+ 
+.card-img {
+    width: 140px;
+    height: 90px;
+    object-fit: contain;
+    margin-bottom: 10px;
+    filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.6));
+}
+ 
+.card-nome {
+    font-size: 13px;
+    font-weight: bold;
+    color: #ffffff;
+    letter-spacing: 1px;
+    margin-bottom: 4px;
+}
+ 
+.card-desc {
+    font-size: 11px;
+    color: #aaaaaa;
+}
+ 
+.selecao-instrucao {
+    font-size: 11px;
+    color: #555;
+    margin-top: 4px;
+}
