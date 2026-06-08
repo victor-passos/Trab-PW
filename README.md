@@ -5,7 +5,7 @@
 ## Funcionalidades
 
 - **Sistema de Faixas:** Troca dinâmica de pistas.
-- **Power-ups:** Coleta de moedas para ganhar pontos e itens de Turbo para obter maior velocidade e invulnerabilidade temporária.
+- **Power-ups:** Coleta de moedas para ganhar pontos e itens de Turbo para obter invulnerabilidade temporária.
 - **Obstáculos Variados:**
   - **Lama:** Inverte os controles temporariamente.
   - **Água:** Remove todas as vidas instantaneamente.
